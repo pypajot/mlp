@@ -59,42 +59,80 @@ optimizers = {
 
 class LossAcc:
 	def	__init__(self):
+		self.acc = 0
+		self.loss = 0
 		self.train_loss = []
 		self.test_loss = []
 		self.train_acc = []
 		self.test_acc = []
+		self.test_precision = 0
+		self.test_recall = 0
+		self.test_f1score = 0
+		self.confusion_matrix = np.empty((0, 0))
 
-	def get_loss_and_acc(self, mlp):
-		mlp.feedforward(mlp.input)
-		loss = 0
-		acc = 0
-		for i in range (mlp.train_output.size):
-			loss -= math.log(mlp.layers[mlp.size - 1].neurons[i][mlp.train_output[i]])
-			acc += (mlp.train_output[i] == np.argmax(mlp.layers[mlp.size - 1].neurons[i]))
-		loss /= mlp.train_output.size
-		# for wei in mlp.weights:
-		# 	loss += np.sum(np.power(wei, 2)) * mlp.regul * mlp.learning_rate
-		self.train_loss.append(loss)
-		self.train_acc.append(acc / mlp.train_output.size)
+	def get_test_loss_and_acc(self, mlp):
 		loss = 0
 		acc = 0
 		mlp.feedforward(mlp.test_input)
 		for i in range (mlp.test_output.size):
-			loss -= math.log(mlp.layers[mlp.size - 1].neurons[i][mlp.test_output[i]])
-			acc += (mlp.test_output[i] == np.argmax(mlp.layers[mlp.size - 1].neurons[i]))
+			loss -= math.log(mlp.layers[-1].neurons[i][mlp.test_output[i]])
+			acc += mlp.test_output[i] == np.argmax(mlp.layers[-1].neurons[i])
 		loss /= mlp.test_output.size
+		acc /= mlp.test_output.size
 		# for wei in mlp.weights:
 		# 	loss += np.sum(np.power(wei, 2)) * mlp.regul * mlp.learning_rate
 		self.test_loss.append(loss)
-		self.test_acc.append(acc / mlp.test_output.size)
+		self.test_acc.append(acc)
+
+	def get_confusion_and_metrics(self, mlp):
+		size = max(mlp.test_output) + 1
+		self.confusion_matrix = np.zeros((size, size))
+		self.acc = 0
+		self.loss = 0
+		for i in range (mlp.test_output.size):
+			self.loss -= math.log(mlp.layers[mlp.size - 1].neurons[i][mlp.test_output[i]])
+			self.confusion_matrix[mlp.test_output[i]][np.argmax(mlp.layers[mlp.size - 1].neurons[i])] += 1
+			# true_pos += int(mlp.test_output[i] and mlp.test_output[i] == np.argmax(mlp.layers[mlp.size - 1].neurons[i]))
+			# true_neg += int((not mlp.test_output[i]) and mlp.test_output[i] == np.argmax(mlp.layers[mlp.size - 1].neurons[i]))
+			# false_pos += int(mlp.test_output[i] and mlp.test_output[i] != np.argmax(mlp.layers[mlp.size - 1].neurons[i]))
+			# false_neg += int((not mlp.test_output[i]) and mlp.test_output[i] != np.argmax(mlp.layers[mlp.size - 1].neurons[i]))
+		# acc = (true_pos + true_neg) / mlp.test_output.size
+		if size == 2:
+			self.acc = (self.confusion_matrix[0][0] + self.confusion_matrix[1][1]) / np.sum(self.confusion_matrix)
+			self.precision = self.confusion_matrix[1][1] / (self.confusion_matrix[1][1] + self.confusion_matrix[1][0])
+			self.recall = self.confusion_matrix[1][1] / (self.confusion_matrix[1][1] + self.confusion_matrix[0][1])
+		else:
+			for i in range(size):
+				self.acc += self.confusion_matrix[i][i]
+				self.precision += self.confusion_matrix[i][i] / (size * (np.sum(self.confusion_matrix[i][:])))
+				self.recall += self.confusion_matrix[i][i] / (size * (np.sum(self.confusion_matrix[:][i])))
+			self.acc /= np.sum(self.confusion_matrix)
+		self.f1score = 2 * self.precision * self.recall / (self.precision + self.recall)
+
+
+	def get_train_loss_and_acc(self, mlp, batch_index):
+		for i in batch_index:
+			# print(mlp.layers[mlp.size - 1].neurons[i])
+			self.loss -= math.log(mlp.layers[mlp.size - 1].neurons[batch_index.index(i)][mlp.train_output[i]]) / mlp.train_output.size
+			self.acc += (mlp.train_output[i] == np.argmax(mlp.layers[mlp.size - 1].neurons[batch_index.index(i)])) / mlp.train_output.size
+		# loss /= mlp.train_output.size
+		# for wei in mlp.weights:
+		# 	loss += np.sum(np.power(wei, 2)) * mlp.regul * mlp.learning_rate
+		# self.train_loss.append(loss)
+		# self.train_acc.append(acc)
+
+	def add_loss_acc(self):
+		self.train_loss.append(self.loss)
+		self.train_acc.append(self.acc)
 
 	def show_curves(self):
 		# fig, axs = plt.subplots(1, 2)
 		axs[0].plot(range(len(self.train_loss)), self.train_loss, label='train')
 		axs[0].plot(range(len(self.test_loss)), self.test_loss, label='validation')
-		axs[1].plot(range(len(self.train_acc)), self.train_acc)
-		axs[1].plot(range(len(self.test_acc)), self.test_acc)
+		axs[1].plot(range(len(self.train_acc)), self.train_acc, label='train')
+		axs[1].plot(range(len(self.test_acc)), self.test_acc, label='validation')
 		axs[0].legend()
+		axs[1].legend()
 		fig.set_size_inches((12, 5))
 		plt.show()
 
@@ -189,7 +227,7 @@ distribution = {
 }
 
 class MultiLayerPerceptron:
-	def __init__(self, epochs = 300, learning_rate = 0.01, batch_size = 1, optimizer = 'sgd', regul = 0.9, seed = None, distrib = 'LCuniform', momentum = 0.9):
+	def __init__(self, epochs = 300, learning_rate = 0.01, batch_size = 1, optimizer = 'sgd', regul = 0.9, seed = None, distrib = 'LCuniform', momentum = 0.9, tol = 0.0001, n_iter_to_change = 10, early_stopping=False):
 		self.epochs = epochs
 		self.learning_rate = learning_rate
 		self.batch_size = batch_size
@@ -212,6 +250,11 @@ class MultiLayerPerceptron:
 		self.rng = np.random.default_rng(seed)
 		self.distrib = distribution[distrib]
 		self.momentum = momentum
+		self.tol = tol
+		self.n_iter_to_change = n_iter_to_change
+		self.early_stopping = early_stopping
+		self.best_loss = np.inf
+		self.best_acc = 0
 
 	def	__init_data(self, train_input, train_output, test_input, test_output):
 		self.input = np.array(train_input)
@@ -256,18 +299,59 @@ class MultiLayerPerceptron:
 		self.__init_weights()
 		self.__train()
 
+	def check_early_stopping(self, curves: LossAcc, no_changes):
+		# if self.early_stopping == False:
+		# 	return 0
+		if self.early_stopping:
+			if curves.test_acc[-1] - self.best_acc < self.tol:
+				no_changes += 1
+			else:
+				no_changes = 0
+			if self.best_acc <= curves.test_acc[-1]:
+				self.best_acc = curves.test_acc[-1]
+				self.best_weights = self.weights
+				self.best_bias = self.bias
+		else:
+			if self.best_loss - curves.train_loss[-1] < self.tol:
+				no_changes += 1
+			else:
+				no_changes = 0
+			if self.best_loss >= curves.train_loss[-1]:
+				self.best_loss = curves.train_loss[-1]
+		return no_changes
+
 	def	__train(self):
 		curves = LossAcc()
+		# print(curves.acc)
 		steps = 0
+		stopped_early = 0
+		no_changes = 0
 		for i in range (self.epochs):
 			batch_set = batch_init(self.input.shape[0])
+			curves.loss = 0
+			curves.acc = 0
 			while (batch_set):
 				batch_index = get_batch(batch_set, self.batch_size)
 				input = self.input[batch_index]
+				# output = self.train_output[batch_index]
 				self.feedforward(input)
+				curves.get_train_loss_and_acc(self, batch_index)
 				steps += 1
 				self.__backprop(batch_index, steps)
-			curves.get_loss_and_acc(self)
+			curves.add_loss_acc()
+			curves.get_test_loss_and_acc(self)
+			no_changes = self.check_early_stopping(curves, no_changes)
+			if no_changes >= self.n_iter_to_change:
+				stopped_early = self.early_stopping
+				break
+		if stopped_early:
+			self.weights = self.best_weights
+			self.bias = self.best_bias
+			# curves.test_loss = curves.test_loss[:self.best_step]
+			# curves.train_loss = curves.train_loss[:self.best_step]
+			# curves.test_acc = curves.test_acc[:self.best_step]
+			# curves.train_acc = curves.train_acc[:self.best_step]
+		curves.get_confusion_and_metrics(mlp)
 		curves.show_curves()
 
 	def feedforward(self, input):
@@ -305,10 +389,11 @@ test_input = data_test.drop(columns=[0, 1])
 from sklearn.neural_network import MLPClassifier
 
 # fig, axs = plt.subplots(1, 2)
-clf = MLPClassifier(hidden_layer_sizes=(100, 100, 100, 100), max_iter=40, learning_rate_init=0.001, activation='relu', batch_size=10, solver='sgd', early_stopping=True).fit(train_input, train_output)
+clf = MLPClassifier(hidden_layer_sizes=(100, 100, 100, 100), max_iter=150, learning_rate_init=0.001, activation='relu', batch_size=200, solver='adam', early_stopping=True).fit(train_input, train_output)
 axs[0].plot(clf.loss_curve_, label='scikit')
-
-mlp = MultiLayerPerceptron(optimizer='sgd', epochs=40, batch_size=10, learning_rate=0.001, regul = 0.0001)
+axs[1].plot(clf.validation_scores_, label='scikit')
+# print(clf.validation_scores_)
+mlp = MultiLayerPerceptron(optimizer='adam', epochs=150, batch_size=200, learning_rate=0.001, regul = 0.0001, early_stopping=True)
 mlp.add_layer(100, 'relu')
 mlp.add_layer(100, 'relu')
 mlp.add_layer(100, 'relu')
