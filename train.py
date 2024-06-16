@@ -7,6 +7,8 @@ import math
 import matplotlib.pyplot as plt
 from sklearn.neural_network import MLPClassifier
 
+import argparse
+
 fig, axs = plt.subplots(1, 2)
 
 def get_part_deriv(mlp, delta, batch_index, i):
@@ -57,7 +59,7 @@ optimizers = {
 	'adam': adam
 }
 
-class LossAcc:
+class Metrics:
 	def	__init__(self):
 		self.acc = 0
 		self.loss = 0
@@ -125,7 +127,7 @@ class LossAcc:
 		self.train_loss.append(self.loss)
 		self.train_acc.append(self.acc)
 
-	def show_curves(self):
+	def show(self):
 		# fig, axs = plt.subplots(1, 2)
 		axs[0].plot(range(len(self.train_loss)), self.train_loss, label='train')
 		axs[0].plot(range(len(self.test_loss)), self.test_loss, label='validation')
@@ -133,7 +135,14 @@ class LossAcc:
 		axs[1].plot(range(len(self.test_acc)), self.test_acc, label='validation')
 		axs[0].legend()
 		axs[1].legend()
-		fig.set_size_inches((12, 5))
+		fig.set_size_inches((15, 5))
+		text_str = '\n'.join((
+			'acc = {:.2}'.format(self.acc),
+			'precision = {:.2}'.format(self.precision),
+			'recall = {:.2}'.format(self.recall),
+			'f1score = {:.2}'.format(self.f1score)
+		))
+		fig.text(0.92, 0.73, s=text_str)
 		plt.show()
 
 def batch_init(size):
@@ -157,7 +166,7 @@ def softmax(x):
 	return np.exp(x) / np.sum(np.exp(x), 1)[:, np.newaxis]
 
 class Layer:
-	def	__init__(self, size, function = 'sigmoid'):
+	def	__init__(self, size, function = 'relu'):
 		self.size = size
 		self.neurons_base = np.empty((self.size, 1), float)
 		self.neurons = np.empty((self.size, 1), float)
@@ -227,7 +236,7 @@ distribution = {
 }
 
 class MultiLayerPerceptron:
-	def __init__(self, epochs = 300, learning_rate = 0.01, batch_size = 1, optimizer = 'sgd', regul = 0.9, seed = None, distrib = 'LCuniform', momentum = 0.9, tol = 0.0001, n_iter_to_change = 10, early_stopping=False):
+	def __init__(self, layers_sizes=(100, 100), activation_func='relu', epochs = 300, learning_rate = 0.01, batch_size = 1, optimizer = 'sgd', regul = 0.0001, seed = None, distrib = 'LCuniform', momentum = 0.9, tol = 0.0001, n_iter_to_change = 10, early_stopping=False):
 		self.epochs = epochs
 		self.learning_rate = learning_rate
 		self.batch_size = batch_size
@@ -255,12 +264,14 @@ class MultiLayerPerceptron:
 		self.early_stopping = early_stopping
 		self.best_loss = np.inf
 		self.best_acc = 0
+		for size in layers_sizes:
+			self.add_layer(size, activation_func)
 
 	def	__init_data(self, train_input, train_output, test_input, test_output):
 		self.input = np.array(train_input)
-		size_input = train_input.shape[1]
-		self.layers.insert(0, Layer(size_input))
-		self.layers_sizes.insert(0, size_input)
+		self.size_input = train_input.shape[1]
+		self.layers.insert(0, Layer(self.size_input))
+		self.layers_sizes.insert(0, self.size_input)
 
 		self.train_output = np.array(train_output)
 		self.output = np.zeros((train_output.size, train_output.max() + 1))
@@ -298,61 +309,63 @@ class MultiLayerPerceptron:
 		self.__init_data(train_input, train_output, test_input, test_output)
 		self.__init_weights()
 		self.__train()
+		self.metrics.show()
 
-	def check_early_stopping(self, curves: LossAcc, no_changes):
+	def check_early_stopping(self, metrics: Metrics, no_changes):
 		# if self.early_stopping == False:
 		# 	return 0
 		if self.early_stopping:
-			if curves.test_acc[-1] - self.best_acc < self.tol:
+			if metrics.test_acc[-1] - self.best_acc < self.tol:
 				no_changes += 1
 			else:
 				no_changes = 0
-			if self.best_acc <= curves.test_acc[-1]:
-				self.best_acc = curves.test_acc[-1]
+			if self.best_acc <= metrics.test_acc[-1]:
+				self.best_acc = metrics.test_acc[-1]
 				self.best_weights = self.weights
 				self.best_bias = self.bias
 		else:
-			if self.best_loss - curves.train_loss[-1] < self.tol:
+			if self.best_loss - metrics.train_loss[-1] < self.tol:
 				no_changes += 1
 			else:
 				no_changes = 0
-			if self.best_loss >= curves.train_loss[-1]:
-				self.best_loss = curves.train_loss[-1]
+			if self.best_loss >= metrics.train_loss[-1]:
+				self.best_loss = metrics.train_loss[-1]
 		return no_changes
 
 	def	__train(self):
-		curves = LossAcc()
+		self.metrics = Metrics()
 		# print(curves.acc)
 		steps = 0
-		stopped_early = 0
 		no_changes = 0
+		self.batch_size = min(self.batch_size, self.size_input)
 		for i in range (self.epochs):
 			batch_set = batch_init(self.input.shape[0])
-			curves.loss = 0
-			curves.acc = 0
+			self.metrics.loss = 0
+			self.metrics.acc = 0
 			while (batch_set):
 				batch_index = get_batch(batch_set, self.batch_size)
 				input = self.input[batch_index]
 				# output = self.train_output[batch_index]
 				self.feedforward(input)
-				curves.get_train_loss_and_acc(self, batch_index)
+				self.metrics.get_train_loss_and_acc(self, batch_index)
 				steps += 1
 				self.__backprop(batch_index, steps)
-			curves.add_loss_acc()
-			curves.get_test_loss_and_acc(self)
-			no_changes = self.check_early_stopping(curves, no_changes)
+			self.metrics.add_loss_acc()
+			self.metrics.get_test_loss_and_acc(self)
+			print('epochs: {}/{} - loss: {:.4} - val_loss: {:.4}'.format(i, self.epochs, self.metrics.train_loss[-1], self.metrics.test_loss[-1]))
+			no_changes = self.check_early_stopping(self.metrics, no_changes)
 			if no_changes >= self.n_iter_to_change:
-				stopped_early = self.early_stopping
+				print('stopped early')
+				if self.early_stopping:
+					self.weights = self.best_weights
+					self.bias = self.best_bias
 				break
-		if stopped_early:
-			self.weights = self.best_weights
-			self.bias = self.best_bias
 			# curves.test_loss = curves.test_loss[:self.best_step]
 			# curves.train_loss = curves.train_loss[:self.best_step]
 			# curves.test_acc = curves.test_acc[:self.best_step]
 			# curves.train_acc = curves.train_acc[:self.best_step]
-		curves.get_confusion_and_metrics(mlp)
-		curves.show_curves()
+		self.metrics.get_confusion_and_metrics(self)
+		# self.curves.show_curves()
 
 	def feedforward(self, input):
 		self.layers[0].neurons = input
@@ -378,29 +391,68 @@ class MultiLayerPerceptron:
 	# 	print(self.weights[0])
 
 
-data_train = pd.read_csv('data_train.csv', header = None)
-train_output = data_train[1]
-train_input = data_train.drop(columns=[0, 1])
+def main():
 
-data_test = pd.read_csv('data_test.csv', header = None)
-test_ouput = data_test[1]
-test_input = data_test.drop(columns=[0, 1])
+	parser = argparse.ArgumentParser(
+		prog='train.py',
+		description='train a MLPClassifier on some data'
+	)
+	parser.add_argument('data_train')
+	parser.add_argument('data_test')
+	parser.add_argument('-L', '--layers', type=tuple[int, ...], default=(100, 100))
+	parser.add_argument('-e', '--epochs', type=int, default=300)
+	parser.add_argument('-l', '--learning_rate', type=float, default=0.001)
+	parser.add_argument('-a', '--activation', default='relu')
+	parser.add_argument('-b', '--batch_size', type=int, default=200)
+	parser.add_argument('-o', '--optimizer', default='adam')
+	parser.add_argument('-E', '--early_stopping', type=bool, default=True)
 
-from sklearn.neural_network import MLPClassifier
+	args = parser.parse_args()
 
-# fig, axs = plt.subplots(1, 2)
-clf = MLPClassifier(hidden_layer_sizes=(100, 100, 100, 100), max_iter=150, learning_rate_init=0.001, activation='relu', batch_size=200, solver='adam', early_stopping=True).fit(train_input, train_output)
-axs[0].plot(clf.loss_curve_, label='scikit')
-axs[1].plot(clf.validation_scores_, label='scikit')
-# print(clf.validation_scores_)
-mlp = MultiLayerPerceptron(optimizer='adam', epochs=150, batch_size=200, learning_rate=0.001, regul = 0.0001, early_stopping=True)
-mlp.add_layer(100, 'relu')
-mlp.add_layer(100, 'relu')
-mlp.add_layer(100, 'relu')
-mlp.add_layer(100, 'relu')
-# mlp.add_layer(100, 'relu')
-# mlp.add_layer(100, 'sigmoid')
-# mlp.add_layer(100, 'sigmoid')
+	try:
+		data_train = pd.read_csv(args.data_train, header = None)
+		train_output = data_train[1]
+		train_input = data_train.drop(columns=[0, 1])
+	except Exception:
+		print('training data is invalid')
+		exit(2)
 
 
-mlp.fit(train_input, train_output, test_input, test_ouput)
+	try:
+		data_test = pd.read_csv(args.data_test, header = None)
+		test_ouput = data_test[1]
+		test_input = data_test.drop(columns=[0, 1])
+	except Exception:
+		print('test data is invalid')
+		exit(2)
+
+
+	# from sklearn.neural_network import MLPClassifier
+
+	# # fig, axs = plt.subplots(1, 2)
+	# # clf = MLPClassifier(hidden_layer_sizes=(100, 100, 100, 100), max_iter=150, learning_rate_init=0.001, activation='relu', batch_size=200, solver='adam', early_stopping=True).fit(train_input, train_output)
+	# # axs[0].plot(clf.loss_curve_, label='scikit')
+	# # axs[1].plot(clf.validation_scores_, label='scikit')
+	# # print(clf.validation_scores_)
+	model = MultiLayerPerceptron(
+		layers_sizes=args.layers,
+		optimizer=args.optimizer,
+		epochs=args.epochs,
+		activation_func=args.activation,
+		batch_size=args.batch_size,
+		learning_rate=args.learning_rate,
+		early_stopping=args.early_stopping
+	)
+	# mlp.add_layer(100, 'relu')
+	# mlp.add_layer(100, 'relu')
+	# mlp.add_layer(100, 'relu')
+	# mlp.add_layer(100, 'relu')
+	# # mlp.add_layer(100, 'relu')
+	# mlp.add_layer(100, 'sigmoid')
+	# mlp.add_layer(100, 'sigmoid')
+
+
+	model.fit(train_input, train_output, test_input, test_ouput)
+
+if __name__ == '__main__':
+	main()
