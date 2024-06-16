@@ -6,144 +6,145 @@ import random
 import math
 import matplotlib.pyplot as plt
 from sklearn.neural_network import MLPClassifier
-
 import argparse
 
-fig, axs = plt.subplots(1, 2)
+from optimizers import optimizers, adam
+from layer import Layer
+from metrics import Metrics
 
-def get_part_deriv(mlp, delta, batch_index, i):
-	if (i == mlp.size - 1):
-		delta = mlp.layers[i].neurons - mlp.output[batch_index]
-	else:
-		delta = mlp.layers[i].deriv_acti(mlp.layers[i].neurons) * np.dot(delta, mlp.weights[i].T)
-	return delta, np.mean(delta, 0), np.dot(mlp.layers[i - 1].neurons.T, delta) / len(batch_index)
+# def get_part_deriv(mlp, delta, batch_index, i):
+# 	if (i == mlp.size - 1):
+# 		delta = mlp.layers[i].neurons - mlp.output[batch_index]
+# 	else:
+# 		delta = mlp.layers[i].deriv_acti(mlp.layers[i].neurons) * np.dot(delta, mlp.weights[i].T)
+# 	return delta, np.mean(delta, 0), np.dot(mlp.layers[i - 1].neurons.T, delta) / len(batch_index)
 
-def adam(mlp, batch_index, steps):
-	delta = 0
-	for i in reversed(range(1, mlp.size)):
-		delta, d_bias, d_weights = get_part_deriv(mlp, delta, batch_index, i)
-		mlp.mt_b[i - 1] = mlp.beta1 * mlp.mt_b[i - 1] + (1 - mlp.beta1) * d_bias
-		mlp.mt_w[i - 1] = mlp.beta1 * mlp.mt_w[i - 1] + (1 - mlp.beta1) * d_weights
+# def adam(mlp, batch_index, steps):
+# 	delta = 0
+# 	for i in reversed(range(1, mlp.size)):
+# 		delta, d_bias, d_weights = get_part_deriv(mlp, delta, batch_index, i)
+# 		mlp.mt_b[i - 1] = mlp.beta1 * mlp.mt_b[i - 1] + (1 - mlp.beta1) * d_bias
+# 		mlp.mt_w[i - 1] = mlp.beta1 * mlp.mt_w[i - 1] + (1 - mlp.beta1) * d_weights
 
-		mlp.vt_b[i - 1] = mlp.beta2 * mlp.vt_b[i - 1] + (1 - mlp.beta2) * np.power(d_bias, 2)
-		mlp.vt_w[i - 1] = mlp.beta2 * mlp.vt_w[i - 1] + (1 - mlp.beta2) * np.power(d_weights, 2)
+# 		mlp.vt_b[i - 1] = mlp.beta2 * mlp.vt_b[i - 1] + (1 - mlp.beta2) * np.power(d_bias, 2)
+# 		mlp.vt_w[i - 1] = mlp.beta2 * mlp.vt_w[i - 1] + (1 - mlp.beta2) * np.power(d_weights, 2)
 
-		mt_corr_b = np.divide(mlp.mt_b[i - 1], 1 - np.power(mlp.beta1, steps))
-		mt_corr_w = np.divide(mlp.mt_w[i - 1], 1 - np.power(mlp.beta1, steps))
+# 		mt_corr_b = np.divide(mlp.mt_b[i - 1], 1 - np.power(mlp.beta1, steps))
+# 		mt_corr_w = np.divide(mlp.mt_w[i - 1], 1 - np.power(mlp.beta1, steps))
 
-		vt_corr_b = np.divide(mlp.vt_b[i - 1], 1 - np.power(mlp.beta2, steps))
-		vt_corr_w = np.divide(mlp.vt_w[i - 1], 1 - np.power(mlp.beta2, steps))
+# 		vt_corr_b = np.divide(mlp.vt_b[i - 1], 1 - np.power(mlp.beta2, steps))
+# 		vt_corr_w = np.divide(mlp.vt_w[i - 1], 1 - np.power(mlp.beta2, steps))
 
-		mt_corr_b = np.divide(mt_corr_b, np.sqrt(vt_corr_b) + mlp.epsilon)
-		mt_corr_w = np.divide(mt_corr_w, np.sqrt(vt_corr_w) + mlp.epsilon)
-		mlp.bias[i - 1] -= mlp.learning_rate * mt_corr_b
-		mlp.weights[i - 1] -= mlp.learning_rate * mt_corr_w
+# 		mt_corr_b = np.divide(mt_corr_b, np.sqrt(vt_corr_b) + mlp.epsilon)
+# 		mt_corr_w = np.divide(mt_corr_w, np.sqrt(vt_corr_w) + mlp.epsilon)
+# 		mlp.bias[i - 1] -= mlp.learning_rate * mt_corr_b
+# 		mlp.weights[i - 1] -= mlp.learning_rate * mt_corr_w
 
-def gradient_descent(mlp, batch_index, steps):
-	delta = 0
-	for i in reversed(range(1, mlp.size)):
-		delta, d_bias, d_weights = get_part_deriv(mlp, delta, batch_index, i)
+# def gradient_descent(mlp, batch_index, steps):
+# 	delta = 0
+# 	for i in reversed(range(1, mlp.size)):
+# 		delta, d_bias, d_weights = get_part_deriv(mlp, delta, batch_index, i)
 
-		mlp.weights[i - 1] -= mlp.weights[i - 1] * mlp.regul
+# 		mlp.weights[i - 1] -= mlp.weights[i - 1] * mlp.regul
 
-		mlp.velocity_w[i - 1] = mlp.momentum * mlp.velocity_w[i - 1] - mlp.learning_rate * d_weights
-		mlp.velocity_b[i - 1] = mlp.momentum * mlp.velocity_b[i - 1] - mlp.learning_rate * d_bias
+# 		mlp.velocity_w[i - 1] = mlp.momentum * mlp.velocity_w[i - 1] - mlp.learning_rate * d_weights
+# 		mlp.velocity_b[i - 1] = mlp.momentum * mlp.velocity_b[i - 1] - mlp.learning_rate * d_bias
 		
-		mlp.weights[i - 1] += mlp.velocity_w[i - 1]
-		mlp.bias[i - 1] += mlp.velocity_b[i - 1]
-		# mlp.bias[i - 1] -= mlp.bias[i - 1] * mlp.regul / len(batch_index)
+# 		mlp.weights[i - 1] += mlp.velocity_w[i - 1]
+# 		mlp.bias[i - 1] += mlp.velocity_b[i - 1]
+# 		# mlp.bias[i - 1] -= mlp.bias[i - 1] * mlp.regul / len(batch_index)
 
 
-optimizers = {
-	'sgd': gradient_descent,
-	'adam': adam
-}
+# optimizers = {
+# 	'sgd': gradient_descent,
+# 	'adam': adam
+# }
 
-class Metrics:
-	def	__init__(self):
-		self.acc = 0
-		self.loss = 0
-		self.train_loss = []
-		self.test_loss = []
-		self.train_acc = []
-		self.test_acc = []
-		self.test_precision = 0
-		self.test_recall = 0
-		self.test_f1score = 0
-		self.confusion_matrix = np.empty((0, 0))
+# class Metrics:
+# 	def	__init__(self):
+# 		self.acc = 0
+# 		self.loss = 0
+# 		self.train_loss = []
+# 		self.test_loss = []
+# 		self.train_acc = []
+# 		self.test_acc = []
+# 		self.test_precision = 0
+# 		self.test_recall = 0
+# 		self.test_f1score = 0
+# 		self.confusion_matrix = np.empty((0, 0))
 
-	def get_test_loss_and_acc(self, mlp):
-		loss = 0
-		acc = 0
-		mlp.feedforward(mlp.test_input)
-		for i in range (mlp.test_output.size):
-			loss -= math.log(mlp.layers[-1].neurons[i][mlp.test_output[i]])
-			acc += mlp.test_output[i] == np.argmax(mlp.layers[-1].neurons[i])
-		loss /= mlp.test_output.size
-		acc /= mlp.test_output.size
-		# for wei in mlp.weights:
-		# 	loss += np.sum(np.power(wei, 2)) * mlp.regul * mlp.learning_rate
-		self.test_loss.append(loss)
-		self.test_acc.append(acc)
+# 	def get_test_loss_and_acc(self, mlp):
+# 		loss = 0
+# 		acc = 0
+# 		mlp.feedforward(mlp.test_input)
+# 		for i in range (mlp.test_output.size):
+# 			loss -= math.log(mlp.layers[-1].neurons[i][mlp.test_output[i]])
+# 			acc += mlp.test_output[i] == np.argmax(mlp.layers[-1].neurons[i])
+# 		loss /= mlp.test_output.size
+# 		acc /= mlp.test_output.size
+# 		# for wei in mlp.weights:
+# 		# 	loss += np.sum(np.power(wei, 2)) * mlp.regul * mlp.learning_rate
+# 		self.test_loss.append(loss)
+# 		self.test_acc.append(acc)
 
-	def get_confusion_and_metrics(self, mlp):
-		size = max(mlp.test_output) + 1
-		self.confusion_matrix = np.zeros((size, size))
-		self.acc = 0
-		self.loss = 0
-		for i in range (mlp.test_output.size):
-			self.loss -= math.log(mlp.layers[mlp.size - 1].neurons[i][mlp.test_output[i]])
-			self.confusion_matrix[mlp.test_output[i]][np.argmax(mlp.layers[mlp.size - 1].neurons[i])] += 1
-			# true_pos += int(mlp.test_output[i] and mlp.test_output[i] == np.argmax(mlp.layers[mlp.size - 1].neurons[i]))
-			# true_neg += int((not mlp.test_output[i]) and mlp.test_output[i] == np.argmax(mlp.layers[mlp.size - 1].neurons[i]))
-			# false_pos += int(mlp.test_output[i] and mlp.test_output[i] != np.argmax(mlp.layers[mlp.size - 1].neurons[i]))
-			# false_neg += int((not mlp.test_output[i]) and mlp.test_output[i] != np.argmax(mlp.layers[mlp.size - 1].neurons[i]))
-		# acc = (true_pos + true_neg) / mlp.test_output.size
-		if size == 2:
-			self.acc = (self.confusion_matrix[0][0] + self.confusion_matrix[1][1]) / np.sum(self.confusion_matrix)
-			self.precision = self.confusion_matrix[1][1] / (self.confusion_matrix[1][1] + self.confusion_matrix[1][0])
-			self.recall = self.confusion_matrix[1][1] / (self.confusion_matrix[1][1] + self.confusion_matrix[0][1])
-		else:
-			for i in range(size):
-				self.acc += self.confusion_matrix[i][i]
-				self.precision += self.confusion_matrix[i][i] / (size * (np.sum(self.confusion_matrix[i][:])))
-				self.recall += self.confusion_matrix[i][i] / (size * (np.sum(self.confusion_matrix[:][i])))
-			self.acc /= np.sum(self.confusion_matrix)
-		self.f1score = 2 * self.precision * self.recall / (self.precision + self.recall)
+# 	def get_confusion_and_metrics(self, mlp):
+# 		size = max(mlp.test_output) + 1
+# 		self.confusion_matrix = np.zeros((size, size))
+# 		self.acc = 0
+# 		self.loss = 0
+# 		for i in range (mlp.test_output.size):
+# 			self.loss -= math.log(mlp.layers[mlp.size - 1].neurons[i][mlp.test_output[i]])
+# 			self.confusion_matrix[mlp.test_output[i]][np.argmax(mlp.layers[mlp.size - 1].neurons[i])] += 1
+# 			# true_pos += int(mlp.test_output[i] and mlp.test_output[i] == np.argmax(mlp.layers[mlp.size - 1].neurons[i]))
+# 			# true_neg += int((not mlp.test_output[i]) and mlp.test_output[i] == np.argmax(mlp.layers[mlp.size - 1].neurons[i]))
+# 			# false_pos += int(mlp.test_output[i] and mlp.test_output[i] != np.argmax(mlp.layers[mlp.size - 1].neurons[i]))
+# 			# false_neg += int((not mlp.test_output[i]) and mlp.test_output[i] != np.argmax(mlp.layers[mlp.size - 1].neurons[i]))
+# 		# acc = (true_pos + true_neg) / mlp.test_output.size
+# 		if size == 2:
+# 			self.acc = (self.confusion_matrix[0][0] + self.confusion_matrix[1][1]) / np.sum(self.confusion_matrix)
+# 			self.precision = self.confusion_matrix[1][1] / (self.confusion_matrix[1][1] + self.confusion_matrix[1][0])
+# 			self.recall = self.confusion_matrix[1][1] / (self.confusion_matrix[1][1] + self.confusion_matrix[0][1])
+# 		else:
+# 			for i in range(size):
+# 				self.acc += self.confusion_matrix[i][i]
+# 				self.precision += self.confusion_matrix[i][i] / (size * (np.sum(self.confusion_matrix[i][:])))
+# 				self.recall += self.confusion_matrix[i][i] / (size * (np.sum(self.confusion_matrix[:][i])))
+# 			self.acc /= np.sum(self.confusion_matrix)
+# 		self.f1score = 2 * self.precision * self.recall / (self.precision + self.recall)
 
 
-	def get_train_loss_and_acc(self, mlp, batch_index):
-		for i in batch_index:
-			# print(mlp.layers[mlp.size - 1].neurons[i])
-			self.loss -= math.log(mlp.layers[mlp.size - 1].neurons[batch_index.index(i)][mlp.train_output[i]]) / mlp.train_output.size
-			self.acc += (mlp.train_output[i] == np.argmax(mlp.layers[mlp.size - 1].neurons[batch_index.index(i)])) / mlp.train_output.size
-		# loss /= mlp.train_output.size
-		# for wei in mlp.weights:
-		# 	loss += np.sum(np.power(wei, 2)) * mlp.regul * mlp.learning_rate
-		# self.train_loss.append(loss)
-		# self.train_acc.append(acc)
+# 	def get_train_loss_and_acc(self, mlp, batch_index):
+# 		for i in batch_index:
+# 			# print(mlp.layers[mlp.size - 1].neurons[i])
+# 			self.loss -= math.log(mlp.layers[mlp.size - 1].neurons[batch_index.index(i)][mlp.train_output[i]]) / mlp.train_output.size
+# 			self.acc += (mlp.train_output[i] == np.argmax(mlp.layers[mlp.size - 1].neurons[batch_index.index(i)])) / mlp.train_output.size
+# 		# loss /= mlp.train_output.size
+# 		# for wei in mlp.weights:
+# 		# 	loss += np.sum(np.power(wei, 2)) * mlp.regul * mlp.learning_rate
+# 		# self.train_loss.append(loss)
+# 		# self.train_acc.append(acc)
 
-	def add_loss_acc(self):
-		self.train_loss.append(self.loss)
-		self.train_acc.append(self.acc)
+# 	def add_loss_acc(self):
+# 		self.train_loss.append(self.loss)
+# 		self.train_acc.append(self.acc)
 
-	def show(self):
-		# fig, axs = plt.subplots(1, 2)
-		axs[0].plot(range(len(self.train_loss)), self.train_loss, label='train')
-		axs[0].plot(range(len(self.test_loss)), self.test_loss, label='validation')
-		axs[1].plot(range(len(self.train_acc)), self.train_acc, label='train')
-		axs[1].plot(range(len(self.test_acc)), self.test_acc, label='validation')
-		axs[0].legend()
-		axs[1].legend()
-		fig.set_size_inches((15, 5))
-		text_str = '\n'.join((
-			'acc = {:.2}'.format(self.acc),
-			'precision = {:.2}'.format(self.precision),
-			'recall = {:.2}'.format(self.recall),
-			'f1score = {:.2}'.format(self.f1score)
-		))
-		fig.text(0.92, 0.73, s=text_str)
-		plt.show()
+# 	def show(self):
+# 		# fig, axs = plt.subplots(1, 2)
+# 		axs[0].plot(range(len(self.train_loss)), self.train_loss, label='train')
+# 		axs[0].plot(range(len(self.test_loss)), self.test_loss, label='validation')
+# 		axs[1].plot(range(len(self.train_acc)), self.train_acc, label='train')
+# 		axs[1].plot(range(len(self.test_acc)), self.test_acc, label='validation')
+# 		axs[0].legend()
+# 		axs[1].legend()
+# 		fig.set_size_inches((15, 5))
+# 		text_str = '\n'.join((
+# 			'acc = {:.2}'.format(self.acc),
+# 			'precision = {:.2}'.format(self.precision),
+# 			'recall = {:.2}'.format(self.recall),
+# 			'f1score = {:.2}'.format(self.f1score)
+# 		))
+# 		fig.text(0.92, 0.73, s=text_str)
+# 		plt.show()
 
 def batch_init(size):
 	set = list(range(size))
@@ -155,40 +156,6 @@ def	get_batch(set, size):
 	batch = set[:size]
 	del set[:size]
 	return batch
-
-def sigmoid(x):
-	return 1 / (1 + np.exp(-x))
-
-def	sigmoid_der(x):
-	return x * (1 - x)
-
-def softmax(x):
-	return np.exp(x) / np.sum(np.exp(x), 1)[:, np.newaxis]
-
-class Layer:
-	def	__init__(self, size, function = 'relu'):
-		self.size = size
-		self.neurons_base = np.empty((self.size, 1), float)
-		self.neurons = np.empty((self.size, 1), float)
-		self.activation = self.activation[function]
-		self.deriv_acti = self.deriv_acti[function]
-
-	activation = {
-		'sigmoid': sigmoid,
-		'softmax': softmax,
-		'tanh': (lambda x: np.tanh(x)),
-		'relu': (lambda x: x * (x > 0)),
-	}
-
-	deriv_acti = {
-		'sigmoid': sigmoid_der,
-		'softmax': (lambda x: 0),
-		'tanh': (lambda x: 1 - x**2),
-		'relu': (lambda x: (x > 0))
-	}
-
-	def init_weights(self, prev_layer_size):
-		self.weights = np.zeros((prev_layer_size, self.size), float)
 		
 
 def normal(rng, F_in, F_out):
@@ -236,7 +203,23 @@ distribution = {
 }
 
 class MultiLayerPerceptron:
-	def __init__(self, layers_sizes=(100, 100), activation_func='relu', epochs = 300, learning_rate = 0.01, batch_size = 1, optimizer = 'sgd', regul = 0.0001, seed = None, distrib = 'LCuniform', momentum = 0.9, tol = 0.0001, n_iter_to_change = 10, early_stopping=False):
+	def __init__(
+		self,
+		layers_sizes=(100, 100),
+		activation_func='relu',
+		epochs = 300,
+		learning_rate = 0.01,
+		batch_size = 1,
+		optimizer = 'sgd',
+		regul = 0.0001,
+		seed = None,
+		distrib = 'LCuniform',
+		momentum = 0.9,
+		tol = 0.0001,
+		n_iter_to_change = 10,
+		early_stopping=False
+	):
+		# assert()
 		self.epochs = epochs
 		self.learning_rate = learning_rate
 		self.batch_size = batch_size
@@ -311,7 +294,7 @@ class MultiLayerPerceptron:
 		self.__train()
 		self.metrics.show()
 
-	def check_early_stopping(self, metrics: Metrics, no_changes):
+	def check_early_stopping(self, metrics: Metrics, no_changes, i):
 		# if self.early_stopping == False:
 		# 	return 0
 		if self.early_stopping:
@@ -321,8 +304,9 @@ class MultiLayerPerceptron:
 				no_changes = 0
 			if self.best_acc <= metrics.test_acc[-1]:
 				self.best_acc = metrics.test_acc[-1]
-				self.best_weights = self.weights
-				self.best_bias = self.bias
+				self.best_epoch = i
+				self.best_weights = [w.copy() for w in self.weights]
+				self.best_bias = [b.copy() for b in self.bias]
 		else:
 			if self.best_loss - metrics.train_loss[-1] < self.tol:
 				no_changes += 1
@@ -353,12 +337,13 @@ class MultiLayerPerceptron:
 			self.metrics.add_loss_acc()
 			self.metrics.get_test_loss_and_acc(self)
 			print('epochs: {}/{} - loss: {:.4} - val_loss: {:.4}'.format(i, self.epochs, self.metrics.train_loss[-1], self.metrics.test_loss[-1]))
-			no_changes = self.check_early_stopping(self.metrics, no_changes)
+			no_changes = self.check_early_stopping(self.metrics, no_changes, i)
 			if no_changes >= self.n_iter_to_change:
-				print('stopped early')
+				print('Stopped early at epoch', self.best_epoch if self.early_stopping else i)
 				if self.early_stopping:
-					self.weights = self.best_weights
-					self.bias = self.best_bias
+					self.weights = [w.copy() for w in self.best_weights]
+					self.bias = [b.copy() for b in self.best_bias]
+					self.feedforward(self.test_input)
 				break
 			# curves.test_loss = curves.test_loss[:self.best_step]
 			# curves.train_loss = curves.train_loss[:self.best_step]
@@ -405,7 +390,7 @@ def main():
 	parser.add_argument('-a', '--activation', default='relu')
 	parser.add_argument('-b', '--batch_size', type=int, default=200)
 	parser.add_argument('-o', '--optimizer', default='adam')
-	parser.add_argument('-E', '--early_stopping', type=bool, default=True)
+	parser.add_argument('-E', '--early_stopping', action='store_true')
 
 	args = parser.parse_args()
 
@@ -443,6 +428,8 @@ def main():
 		learning_rate=args.learning_rate,
 		early_stopping=args.early_stopping
 	)
+
+	print(args.early_stopping)
 	# mlp.add_layer(100, 'relu')
 	# mlp.add_layer(100, 'relu')
 	# mlp.add_layer(100, 'relu')
