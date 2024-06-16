@@ -1,6 +1,7 @@
-import math
 import numpy as np
 import matplotlib.pyplot as plt
+
+from loss import loss_func
 
 class Metrics:
 	def	__init__(self):
@@ -20,7 +21,8 @@ class Metrics:
 		acc = 0
 		mlp.feedforward(mlp.test_input)
 		for i in range (mlp.test_output.size):
-			loss -= math.log(mlp.layers[-1].neurons[i][mlp.test_output[i]])
+			loss += loss_func[mlp.output_layer_activation](mlp.layers[-1].neurons[i], mlp.test_output[i])
+			# math.log(mlp.layers[-1].neurons[i][mlp.test_output[i]])
 			acc += mlp.test_output[i] == np.argmax(mlp.layers[-1].neurons[i])
 		loss /= mlp.test_output.size
 		acc /= mlp.test_output.size
@@ -35,8 +37,8 @@ class Metrics:
 		self.acc = 0
 		self.loss = 0
 		for i in range (mlp.test_output.size):
-			self.loss -= math.log(mlp.layers[mlp.size - 1].neurons[i][mlp.test_output[i]])
-			self.confusion_matrix[mlp.test_output[i]][np.argmax(mlp.layers[mlp.size - 1].neurons[i])] += 1
+			self.loss += loss_func[mlp.output_layer_activation](mlp.layers[-1].neurons[i], mlp.test_output[i])
+			self.confusion_matrix[mlp.test_output[i]][np.argmax(mlp.layers[-1].neurons[i])] += 1
 			# true_pos += int(mlp.test_output[i] and mlp.test_output[i] == np.argmax(mlp.layers[mlp.size - 1].neurons[i]))
 			# true_neg += int((not mlp.test_output[i]) and mlp.test_output[i] == np.argmax(mlp.layers[mlp.size - 1].neurons[i]))
 			# false_pos += int(mlp.test_output[i] and mlp.test_output[i] != np.argmax(mlp.layers[mlp.size - 1].neurons[i]))
@@ -57,10 +59,14 @@ class Metrics:
 
 	def get_train_loss_and_acc(self, mlp, batch_index):
 		for i in batch_index:
+			# print(mlp.output_layer_activation)
 			# print(mlp.layers[mlp.size - 1].neurons[i])
-			self.loss -= math.log(mlp.layers[mlp.size - 1].neurons[batch_index.index(i)][mlp.train_output[i]]) / mlp.train_output.size
+			# print(mlp.layers[-1].neurons[batch_index.index(i)])
+			self.loss += loss_func[mlp.output_layer_activation](mlp.layers[-1].neurons[batch_index.index(i)], mlp.train_output[i]) / mlp.train_output.size
+			# self.loss -= math.log(mlp.layers[-1].neurons[batch_index.index(i)][mlp.train_output[i]]) / mlp.train_output.size
 			self.acc += (mlp.train_output[i] == np.argmax(mlp.layers[mlp.size - 1].neurons[batch_index.index(i)])) / mlp.train_output.size
-		# loss /= mlp.train_output.size
+		# self.loss /= mlp.train_output.size
+		# self.acc /= mlp.train_output.size
 		# for wei in mlp.weights:
 		# 	loss += np.sum(np.power(wei, 2)) * mlp.regul * mlp.learning_rate
 		# self.train_loss.append(loss)

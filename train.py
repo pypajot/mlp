@@ -20,6 +20,7 @@ def main():
 	parser.add_argument('-b', '--batch_size', type=int, default=200)
 	parser.add_argument('-o', '--optimizer', default='adam')
 	parser.add_argument('-E', '--early_stopping', action='store_true')
+	parser.add_argument('-A', '--output_layer_activation', default='softmax')
 
 	args = parser.parse_args()
 
@@ -69,6 +70,8 @@ def main():
 
 
 	model.fit(train_input, train_output, test_input, test_ouput)
+	model.metrics.show()
+
 
 if __name__ == '__main__':
 	main()

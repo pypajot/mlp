@@ -1,4 +1,3 @@
-import pandas as pd
 import numpy as np
 import random
 
@@ -73,7 +72,8 @@ class MultiLayerPerceptron:
 		optimizer = 'sgd',
 		regul = 0.0001,
 		seed = None,
-		distrib = 'LCuniform',
+		distrib = 'XGuniform',
+		output_layer_activation='softmax',
 		momentum = 0.9,
 		tol = 0.0001,
 		n_iter_to_change = 10,
@@ -83,6 +83,7 @@ class MultiLayerPerceptron:
 		self.epochs = epochs
 		self.learning_rate = learning_rate
 		self.batch_size = batch_size
+		self.output_layer_activation = output_layer_activation
 		self.size = 2
 		self.layers_sizes = []
 		self.layers = []
@@ -119,10 +120,13 @@ class MultiLayerPerceptron:
 		self.train_output = np.array(train_output)
 		self.output = np.zeros((train_output.size, train_output.max() + 1))
 		self.output[np.arange(train_output.size), train_output] = 1
-		self.possible_output = np.unique(train_output)
-		size_output = len(self.possible_output)
-		self.layers.append(Layer(size_output, 'softmax'))
-		self.layers_sizes.append(size_output)
+		if self.output_layer_activation == 'softmax':
+			self.possible_output = np.unique(train_output)
+			self.size_output = len(self.possible_output)
+		else:
+			self.size_output = 1
+		self.layers.append(Layer(self.size_output, self.output_layer_activation))
+		self.layers_sizes.append(self.size_output)
 
 		self.test_input = test_input
 		self.test_output = test_output
@@ -134,10 +138,9 @@ class MultiLayerPerceptron:
 				self.vt_b.append(np.zeros((1, self.layers_sizes[i])))
 				self.mt_w.append(np.zeros((self.layers_sizes[i - 1], self.layers_sizes[i])))
 				self.vt_w.append(np.zeros((self.layers_sizes[i - 1], self.layers_sizes[i])))
-			lim = np.sqrt(6 / (self.layers_sizes[i - 1] + self.layers_sizes[i]))
-			weights = np.array(self.rng.uniform(-lim, lim, (self.layers_sizes[i - 1], self.layers_sizes[i])))
+			weights = np.array(self.distrib(self.rng, self.layers_sizes[i - 1], self.layers_sizes[i]))
 			self.weights.append(weights)
-			bias = np.array(self.rng.uniform(-lim, lim, (1, self.layers_sizes[i])))
+			bias = np.array(self.distrib(self.rng, 1, self.layers_sizes[i]))
 			self.bias.append(bias)
 			if self.momentum != 0:
 				self.velocity_w.append(np.zeros(weights.shape))
@@ -152,7 +155,6 @@ class MultiLayerPerceptron:
 		self.__init_data(train_input, train_output, test_input, test_output)
 		self.__init_weights()
 		self.__train()
-		self.metrics.show()
 
 	def check_early_stopping(self, metrics: Metrics, no_changes, i):
 		# if self.early_stopping == False:
