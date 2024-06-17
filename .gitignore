@@ -1,4 +1,5 @@
 __pycache__
+data.csv
 data_test.csv
 data_train.csv
 *.pkl
