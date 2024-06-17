@@ -17,6 +17,7 @@ class Metrics:
 		self.test_recall = 0
 		self.test_f1score = 0
 		self.confusion_matrix = np.empty((0, 0))
+		self.name = None
 
 	def get_test_loss_and_acc(self, mlp):
 		loss = 0
@@ -35,6 +36,10 @@ class Metrics:
 		self.test_acc.append(acc)
 
 	def get_confusion_and_metrics(self, mlp, output):
+		if mlp.name == None or type(mlp.name) is not str:
+			self.name = mlp.opti_name + mlp.output_layer_activation
+		else:
+			self.name = mlp.name
 		size = max(output) + 1
 		self.converged_in = mlp.converged_in
 		self.confusion_matrix = np.zeros((size, size))
@@ -51,6 +56,8 @@ class Metrics:
 		self.loss /= mlp.layers[-1].neurons.shape[0]
 		self.test_acc = self.test_acc[:self.converged_in]
 		self.test_loss = self.test_loss[:self.converged_in]
+		self.train_acc = self.train_acc[:self.converged_in]
+		self.train_loss = self.train_loss[:self.converged_in]
 		if size == 2:
 			self.acc = (self.confusion_matrix[0][0] + self.confusion_matrix[1][1]) / np.sum(self.confusion_matrix)
 			self.precision = self.confusion_matrix[1][1] / (self.confusion_matrix[1][1] + self.confusion_matrix[1][0])
@@ -93,6 +100,7 @@ class Metrics:
 		plot_1.set_xticks([0, 1], ['False', 'True'])
 		plot_1.xaxis.tick_bottom()
 		plot_1.set_yticks([0, 1], ['False', 'True'])
+		plot_1.set_title('Confusion matrix')
 
 		plot_2.set_axis_off()
 		text_str = '\n'.join((
@@ -103,6 +111,7 @@ class Metrics:
 			'f1 score = {:.3}'.format(self.f1score)
 		))
 		plot_2.text(0.14, 0.32, s=text_str, size=16)
+		plot_2.set_title('Evaluation metrics')
 
 	def show(self):
 		fig, axs = plt.subplots(2, 2)
@@ -112,6 +121,7 @@ class Metrics:
 		axs[0][0].set_ylabel('loss')
 		axs[0][0].xaxis.set_major_locator(MaxNLocator(integer=True))
 		axs[0][0].legend()
+		axs[0][0].set_title('Loss')
 
 		axs[0][1].plot(range(1, len(self.train_acc) + 1), self.train_acc, label='train')
 		axs[0][1].plot(range(1, len(self.test_acc) + 1), self.test_acc, label='validation')
@@ -119,6 +129,7 @@ class Metrics:
 		axs[0][1].set_ylabel('accurary')
 		axs[0][1].xaxis.set_major_locator(MaxNLocator(integer=True))
 		axs[0][1].legend()
+		axs[0][1].set_title('accuracy')
 
 
 		self.show_confusion_and_metrics(axs[1][0], axs[1][1])

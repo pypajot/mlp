@@ -15,7 +15,7 @@ class MultiLayerPerceptron:
 		epochs = 300,
 		learning_rate = 0.01,
 		batch_size = 50,
-		optimizer = 'sgd',
+		optimizer = 'adam',
 		regul = 0.0001,
 		seed = None,
 		distrib = 'XGuniform',
@@ -25,7 +25,8 @@ class MultiLayerPerceptron:
 		n_iter_to_change = 10,
 		early_stopping = False,
 		beta1 = 0.9,
-		beta2 = 0.999
+		beta2 = 0.999,
+		name=None
 	):
 		# assert()
 		self.epochs = epochs
@@ -59,6 +60,7 @@ class MultiLayerPerceptron:
 		self.best_acc = 0
 		self.converged_in = 0
 		self.rng = np.random.default_rng(seed)
+		self.name = name
 		for size in layers_sizes:
 			self.add_layer(size, activation_func)
 

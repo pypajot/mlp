@@ -34,6 +34,7 @@ def main():
 	parser.add_argument('-s', '--seed', type=int, default=None)
 	parser.add_argument('-b1', '--beta1', type=float, default=0.9)
 	parser.add_argument('-b2', '--beta2', type=float, default=0.999)
+	parser.add_argument('-N', '--name', default=None)
 
 
 
@@ -74,6 +75,7 @@ def main():
 			beta2=args.beta2,
 			distrib=args.distribution,
 			seed=args.seed,
+			name=args.name
 		)
 		model.fit(train_input, train_output, test_input, test_output)
 		model.metrics.show()
@@ -97,7 +99,7 @@ def main():
 			metrics = []
 		metrics.append(model.metrics)
 		metric_file_write = open('metrics.pkl', 'wb')
-		metrics = pickle.dump(metric_file_write)
+		metrics = pickle.dump(metrics, metric_file_write)
 	except Exception as e:
 		print(e)
 		print('Error pickling metrics')
