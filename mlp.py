@@ -179,12 +179,12 @@ class MultiLayerPerceptron:
 		return no_changes
 
 	def	__train(self):
-		self.metrics = Metrics()
+		self.metrics = Metrics(self.output_layer_activation)
 		# print(curves.acc)
 		steps = 0
 		no_changes = 0
 		self.batch_size = min(self.batch_size, self.size_input)
-		for i in range (self.epochs):
+		for i in range (1, self.epochs + 1):
 			batch_set = batch_init(self.input.shape[0])
 			self.metrics.loss = 0
 			self.metrics.acc = 0
@@ -211,15 +211,20 @@ class MultiLayerPerceptron:
 			# curves.train_loss = curves.train_loss[:self.best_step]
 			# curves.test_acc = curves.test_acc[:self.best_step]
 			# curves.train_acc = curves.train_acc[:self.best_step]
-		self.metrics.get_confusion_and_metrics(self)
+		self.converged_in = self.best_epoch if self.early_stopping else i
+		self.metrics.get_confusion_and_metrics(self, self.test_output)
 		# self.curves.show_curves()
+
+	def	predict(self, input, output):
+		self.predict_output = output
+		self.feedforward(input)
 
 	def feedforward(self, input):
 		self.layers[0].neurons = input
 		for i in range (1, self.size):
 			self.layers[i].neurons_base = np.dot(self.layers[i - 1].neurons, self.weights[i - 1]) + self.bias[i - 1]
 			self.layers[i].neurons = self.layers[i].activation(self.layers[i].neurons_base)
-		return self.layers[self.size - 1].neurons
+		return self.layers[-1].neurons
 
 	def	__backprop(self, batch_index, steps):
 		self.optimizer(self, batch_index, steps)

@@ -9,18 +9,33 @@ def	sigmoid_der(x):
 def softmax(x):
 	return np.exp(x) / np.sum(np.exp(x), 1)[:, np.newaxis]
 
+def	softmax_der(x):
+	return 0
+
+def tanh(x):
+	return np.tanh(x)
+
+def	tanh_der(x):
+	return 1 - x ** 2
+
+def	relu(x):
+	return x * (x > 0)
+
+def	relu_der(x):
+	return x > 0
+
 activation = {
 	'sigmoid': sigmoid,
 	'softmax': softmax,
-	'tanh': (lambda x: np.tanh(x)),
-	'relu': (lambda x: x * (x > 0)),
+	'tanh': tanh,
+	'relu': relu,
 }
 
 deriv_acti = {
 	'sigmoid': sigmoid_der,
-	'softmax': (lambda x: 0),
-	'tanh': (lambda x: 1 - x**2),
-	'relu': (lambda x: (x > 0))
+	'softmax': softmax_der,
+	'tanh': tanh_der,
+	'relu': relu_der
 }
 
 class Layer:

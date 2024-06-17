@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import pandas as pd
+import pickle
 import argparse
 
 def	split_df(df: pd.DataFrame, split):
@@ -23,8 +24,18 @@ file = pd.read_csv('data.csv', header = None)
 file[file == 'B'] = 0
 file[file == 'M'] = 1
 
+norm = {
+	'mean': [],
+	'std': []
+}
+
 for i in file.columns[2:]:
+	norm['mean'].append(file[i].mean())
+	norm['std'].append(file[i].std())
 	file[i] = (file[i] - file[i].mean()) / file[i].std()
+
+norm_file = open('norm.pkl', 'wb')
+pickle.dump(norm, norm_file)
 
 negatives = file[file[1] == 0]
 positives = file[file[1] == 1]

@@ -2,6 +2,7 @@
 
 import pandas as pd
 import argparse
+import pickle
 
 from mlp import MultiLayerPerceptron
 
@@ -35,7 +36,7 @@ def main():
 
 	try:
 		data_test = pd.read_csv(args.data_test, header = None)
-		test_ouput = data_test[1]
+		test_output = data_test[1]
 		test_input = data_test.drop(columns=[0, 1])
 	except Exception:
 		print('test data is invalid')
@@ -59,7 +60,6 @@ def main():
 		early_stopping=args.early_stopping
 	)
 
-	print(args.early_stopping)
 	# mlp.add_layer(100, 'relu')
 	# mlp.add_layer(100, 'relu')
 	# mlp.add_layer(100, 'relu')
@@ -69,9 +69,12 @@ def main():
 	# mlp.add_layer(100, 'sigmoid')
 
 
-	model.fit(train_input, train_output, test_input, test_ouput)
+	model.fit(train_input, train_output, test_input, test_output)
 	model.metrics.show()
 
+	file = open('model.pkl', 'wb')
+
+	pickle.dump(model, file)
 
 if __name__ == '__main__':
 	main()
