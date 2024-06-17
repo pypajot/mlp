@@ -22,6 +22,16 @@ def main():
 	parser.add_argument('-o', '--optimizer', default='adam')
 	parser.add_argument('-E', '--early_stopping', action='store_true')
 	parser.add_argument('-A', '--output_layer_activation', default='softmax')
+	parser.add_argument('-d', '--distribution', default='XGuniform')
+	parser.add_argument('-m', '--momentum', type=float, default=0.9)
+	parser.add_argument('-r', '--regul', type=float, default=0.0001)
+	parser.add_argument('-t', '--tol', type=float, default=0.0001)
+	parser.add_argument('-n', '--n_iter_to_change', type=int, default=10)
+	parser.add_argument('-s', '--seed', type=int, default=0)
+	parser.add_argument('-b1', '--beta1', type=float, default=0.9)
+	parser.add_argument('-b2', '--beta2', type=float, default=0.999)
+
+
 
 	args = parser.parse_args()
 
@@ -42,39 +52,38 @@ def main():
 		print('test data is invalid')
 		exit(2)
 
+	try:
+		model = MultiLayerPerceptron(
+			layers_sizes=args.layers,
+			optimizer=args.optimizer,
+			epochs=args.epochs,
+			activation_func=args.activation,
+			output_layer_activation=args.output_layer_activation,
+			batch_size=args.batch_size,
+			learning_rate=args.learning_rate,
+			early_stopping=args.early_stopping,
+			momentum=args.momentum,
+			regul=args.regul,
+			tol=args.tol,
+			n_iter_to_change=args.n_iter_to_change,
+			beta1=args.beta1,
+			beta2=args.beta2,
+			distrib=args.distribution,
+			seed=args.seed,
+		)
+		model.fit(train_input, train_output, test_input, test_output)
+		model.metrics.show()
+	except Exception as e:
+		print(e)
+		exit(1)
 
-	# from sklearn.neural_network import MLPClassifier
-
-	# # fig, axs = plt.subplots(1, 2)
-	# # clf = MLPClassifier(hidden_layer_sizes=(100, 100, 100, 100), max_iter=150, learning_rate_init=0.001, activation='relu', batch_size=200, solver='adam', early_stopping=True).fit(train_input, train_output)
-	# # axs[0].plot(clf.loss_curve_, label='scikit')
-	# # axs[1].plot(clf.validation_scores_, label='scikit')
-	# # print(clf.validation_scores_)
-	model = MultiLayerPerceptron(
-		layers_sizes=args.layers,
-		optimizer=args.optimizer,
-		epochs=args.epochs,
-		activation_func=args.activation,
-		batch_size=args.batch_size,
-		learning_rate=args.learning_rate,
-		early_stopping=args.early_stopping
-	)
-
-	# mlp.add_layer(100, 'relu')
-	# mlp.add_layer(100, 'relu')
-	# mlp.add_layer(100, 'relu')
-	# mlp.add_layer(100, 'relu')
-	# # mlp.add_layer(100, 'relu')
-	# mlp.add_layer(100, 'sigmoid')
-	# mlp.add_layer(100, 'sigmoid')
-
-
-	model.fit(train_input, train_output, test_input, test_output)
-	model.metrics.show()
-
-	file = open('model.pkl', 'wb')
-
-	pickle.dump(model, file)
+	try:
+		file = open('model.pkl', 'wb')
+		pickle.dump(model, file)
+	except Exception as e:
+		print(e)
+		print('Error opening model.pkl')
+		exit(2)
 
 if __name__ == '__main__':
 	main()

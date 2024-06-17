@@ -21,7 +21,7 @@ class Metrics:
 	def get_test_loss_and_acc(self, mlp):
 		loss = 0
 		acc = 0
-		mlp.feedforward(mlp.test_input)
+		# mlp.feedforward(mlp.test_input)
 		# print(mlp.layers[-1].neurons.shape[0])
 		for i in range (mlp.layers[-1].neurons.shape[0]):
 			loss += self.loss_func(mlp.layers[-1].neurons[i], mlp.test_output[i])

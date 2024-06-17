@@ -41,6 +41,7 @@ deriv_acti = {
 class Layer:
 	def	__init__(self, size, function = 'relu'):
 		self.size = size
+		self.activ_name = function
 		self.neurons_base = np.empty((self.size, 1), float)
 		self.neurons = np.empty((self.size, 1), float)
 		self.activation = activation[function]
@@ -49,3 +50,23 @@ class Layer:
 
 	def init_weights(self, prev_layer_size):
 		self.weights = np.zeros((prev_layer_size, self.size), float)
+
+	@property
+	def activ_name(self):
+		return self._activ_name
+
+	@activ_name.setter
+	def	activ_name(self, d):
+		if d not in ['sigmoid', 'softmax', 'tanh', 'relu']:
+			raise ValueError('activation function must be sigmoid, softmax, relu or tanh')
+		self._activ_name = d
+	
+	@property
+	def size(self):
+		return self._size
+
+	@size.setter
+	def	size(self, s):
+		if type(s) is not int or s <= 0:
+			raise ValueError('layer size must be a positive integer')
+		self._size = s
