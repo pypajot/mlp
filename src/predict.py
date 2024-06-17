@@ -5,6 +5,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import argparse
 
+import sys
+sys.path.append('modules')
+
 def	main():
 
 	parser = argparse.ArgumentParser(

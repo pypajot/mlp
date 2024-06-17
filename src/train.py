@@ -4,6 +4,9 @@ import pandas as pd
 import argparse
 import pickle
 
+import sys
+sys.path.append('modules')
+
 from mlp import MultiLayerPerceptron
 
 def main():

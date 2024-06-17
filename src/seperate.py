@@ -4,6 +4,9 @@ import pandas as pd
 import pickle
 import argparse
 
+import sys
+sys.path.append('modules')
+
 from utils import split_df
 
 def main():
