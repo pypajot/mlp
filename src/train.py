@@ -10,7 +10,7 @@ def main():
 
 	parser = argparse.ArgumentParser(
 		prog='train.py',
-		description='train a MLPClassifier on some data'
+		description='Train a MLPClassifier on some data'
 	)
 	parser.add_argument('data_train')
 	parser.add_argument('data_test')
@@ -27,7 +27,7 @@ def main():
 	parser.add_argument('-r', '--regul', type=float, default=0.0001)
 	parser.add_argument('-t', '--tol', type=float, default=0.0001)
 	parser.add_argument('-n', '--n_iter_to_change', type=int, default=10)
-	parser.add_argument('-s', '--seed', type=int, default=0)
+	parser.add_argument('-s', '--seed', type=int, default=None)
 	parser.add_argument('-b1', '--beta1', type=float, default=0.9)
 	parser.add_argument('-b2', '--beta2', type=float, default=0.999)
 

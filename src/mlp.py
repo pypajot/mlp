@@ -1,5 +1,4 @@
 import numpy as np
-import random
 
 from optimizers import optimizers
 from layer import Layer
@@ -24,9 +23,9 @@ class MultiLayerPerceptron:
 		momentum = 0.9,
 		tol = 0.0001,
 		n_iter_to_change = 10,
-		early_stopping=False,
-		beta1=0.9,
-		beta2=0.999
+		early_stopping = False,
+		beta1 = 0.9,
+		beta2 = 0.999
 	):
 		# assert()
 		self.epochs = epochs
