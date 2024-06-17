@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import argparse
 
 import sys
-sys.path.append('modules')
+sys.path.append('/home/pierre-yves/Documents/Projects/mlp/src/modules')
 
 def	main():
 

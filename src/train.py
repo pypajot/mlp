@@ -3,9 +3,10 @@
 import pandas as pd
 import argparse
 import pickle
+import os
 
 import sys
-sys.path.append('modules')
+sys.path.append('/home/pierre-yves/Documents/Projects/mlp/src/modules')
 
 from mlp import MultiLayerPerceptron
 
@@ -86,6 +87,20 @@ def main():
 	except Exception as e:
 		print(e)
 		print('Error opening model.pkl')
+		exit(2)
+
+	try:
+		if os.path.isfile('metrics.pkl'):
+			metric_file_read = open('metrics.pkl', 'rb')
+			metrics = pickle.load(metric_file_read)
+		else:
+			metrics = []
+		metrics.append(model.metrics)
+		metric_file_write = open('metrics.pkl', 'wb')
+		metrics = pickle.dump(metric_file_write)
+	except Exception as e:
+		print(e)
+		print('Error pickling metrics')
 		exit(2)
 
 if __name__ == '__main__':
