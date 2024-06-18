@@ -6,7 +6,7 @@ import pickle
 import os
 
 import sys
-sys.path.append('/home/pierre-yves/Documents/Projects/mlp/src/modules')
+sys.path.append('/mnt/nfs/homes/ppajot/Documents/mlp/src/modules')
 
 from mlp import MultiLayerPerceptron
 

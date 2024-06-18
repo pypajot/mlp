@@ -28,7 +28,6 @@ class MultiLayerPerceptron:
 		beta2 = 0.999,
 		name=None
 	):
-		# assert()
 		self.epochs = epochs
 		self.learning_rate = learning_rate
 		self.batch_size = batch_size
@@ -242,8 +241,7 @@ class MultiLayerPerceptron:
 		self.__train()
 
 	def __check_early_stopping(self, metrics: Metrics, no_changes, i):
-		# if self.early_stopping == False:
-		# 	return 0
+		
 		if self.early_stopping:
 			if metrics.test_acc[-1] - self.best_acc < self.tol:
 				no_changes += 1
@@ -265,7 +263,6 @@ class MultiLayerPerceptron:
 
 	def	__train(self):
 		self.metrics = Metrics(self.output_layer_activation)
-		# print(curves.acc)
 		steps = 0
 		no_changes = 0
 		self.batch_size = min(self.batch_size, self.size_input)
@@ -276,7 +273,6 @@ class MultiLayerPerceptron:
 			while (batch_set):
 				batch_index = get_batch(batch_set, self.batch_size)
 				input = self.input[batch_index]
-				# output = self.train_output[batch_index]
 				self.__feedforward(input)
 				self.metrics.get_train_loss_and_acc(self, batch_index)
 				steps += 1
@@ -293,13 +289,8 @@ class MultiLayerPerceptron:
 					self.bias = [b.copy() for b in self.best_bias]
 					self.__feedforward(self.test_input)
 				break
-			# curves.test_loss = curves.test_loss[:self.best_step]
-			# curves.train_loss = curves.train_loss[:self.best_step]
-			# curves.test_acc = curves.test_acc[:self.best_step]
-			# curves.train_acc = curves.train_acc[:self.best_step]
 		self.converged_in = self.best_epoch if self.early_stopping else i
 		self.metrics.get_confusion_and_metrics(self, self.test_output)
-		# self.curves.show_curves()
 
 	def	predict(self, input, output):
 		if self.converged_in == 0:
@@ -317,16 +308,4 @@ class MultiLayerPerceptron:
 
 	def	__backprop(self, batch_index, steps):
 		self.optimizer(self, batch_index, steps)
-		# for i in reversed(range(1, self.size)):
-		# 	if (i == self.size - 1):
-		# 		delta = self.layers[i].neurons - self.output[batch_index]
-		# 	else:
-		# 		delta = self.layers[i].deriv_acti(self.layers[i].neurons) * np.dot(delta, self.weights[i].T)
-		# 	self.bias[i - 1] -= self.learning_rate / len(batch_index) * np.sum(delta, 0)
-		# 	self.weights[i - 1] -= self.learning_rate / len(batch_index) * np.dot(self.layers[i - 1].neurons.T, delta)
-			
-	# def test(self, test_input, test_output):
-	# 	result = self.__feedforward(test_input)
-	# 	# print(result)
-	# 	# for weights in self.weights:
-	# 	print(self.weights[0])
+		

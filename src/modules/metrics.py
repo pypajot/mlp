@@ -22,16 +22,13 @@ class Metrics:
 	def get_test_loss_and_acc(self, mlp):
 		loss = 0
 		acc = 0
-		# mlp.feedforward(mlp.test_input)
-		# print(mlp.layers[-1].neurons.shape[0])
+		
 		for i in range (mlp.layers[-1].neurons.shape[0]):
 			loss += self.loss_func(mlp.layers[-1].neurons[i], mlp.test_output[i])
-			# math.log(mlp.layers[-1].neurons[i][mlp.test_output[i]])
 			acc += mlp.test_output[i] == np.argmax(mlp.layers[-1].neurons[i])
 		loss /= mlp.layers[-1].neurons.shape[0]
 		acc /= mlp.layers[-1].neurons.shape[0]
-		# for wei in mlp.weights:
-		# 	loss += np.sum(np.power(wei, 2)) * mlp.regul * mlp.learning_rate
+
 		self.test_loss.append(loss)
 		self.test_acc.append(acc)
 
@@ -48,11 +45,7 @@ class Metrics:
 		for i in range (mlp.layers[-1].neurons.shape[0]):
 			self.loss += self.loss_func(mlp.layers[-1].neurons[i], output[i])
 			self.confusion_matrix[output[i]][np.argmax(mlp.layers[-1].neurons[i])] += 1
-			# true_pos += int(mlp.test_output[i] and mlp.test_output[i] == np.argmax(mlp.layers[mlp.size - 1].neurons[i]))
-			# true_neg += int((not mlp.test_output[i]) and mlp.test_output[i] == np.argmax(mlp.layers[mlp.size - 1].neurons[i]))
-			# false_pos += int(mlp.test_output[i] and mlp.test_output[i] != np.argmax(mlp.layers[mlp.size - 1].neurons[i]))
-			# false_neg += int((not mlp.test_output[i]) and mlp.test_output[i] != np.argmax(mlp.layers[mlp.size - 1].neurons[i]))
-		# acc = (true_pos + true_neg) / mlp.test_output.size
+		
 		self.loss /= mlp.layers[-1].neurons.shape[0]
 		self.test_acc = self.test_acc[:self.converged_in]
 		self.test_loss = self.test_loss[:self.converged_in]
@@ -73,18 +66,8 @@ class Metrics:
 
 	def get_train_loss_and_acc(self, mlp, batch_index):
 		for i in batch_index:
-			# print(mlp.output_layer_activation)
-			# print(mlp.layers[mlp.size - 1].neurons[i])
-			# print(mlp.layers[-1].neurons[batch_index.index(i)])
 			self.loss += self.loss_func(mlp.layers[-1].neurons[batch_index.index(i)], mlp.train_output[i]) / mlp.train_output.size
-			# self.loss -= math.log(mlp.layers[-1].neurons[batch_index.index(i)][mlp.train_output[i]]) / mlp.train_output.size
 			self.acc += (mlp.train_output[i] == np.argmax(mlp.layers[mlp.size - 1].neurons[batch_index.index(i)])) / mlp.train_output.size
-		# self.loss /= mlp.train_output.size
-		# self.acc /= mlp.train_output.size
-		# for wei in mlp.weights:
-		# 	loss += np.sum(np.power(wei, 2)) * mlp.regul * mlp.learning_rate
-		# self.train_loss.append(loss)
-		# self.train_acc.append(acc)
 
 	def add_loss_acc(self):
 		self.train_loss.append(self.loss)
@@ -131,28 +114,7 @@ class Metrics:
 		axs[0][1].legend()
 		axs[0][1].set_title('accuracy')
 
-
 		self.show_confusion_and_metrics(axs[1][0], axs[1][1])
-		# axs[1][0].matshow(self.confusion_matrix, cmap=plt.cm.Blues)
-		# for i in range(self.confusion_matrix.shape[0]):
-		# 	for j in range(self.confusion_matrix.shape[0]):
-		# 		axs[1][0].text(i, j, int(self.confusion_matrix[j, i]), va='center', ha='center', size=15)
-		# axs[1][0].set_xlabel('expected')
-		# axs[1][0].set_ylabel('prediction')
-		# axs[1][0].set_xticks([0, 1], ['False', 'True'])
-		# axs[1][0].xaxis.tick_bottom()
-		# axs[1][0].set_yticks([0, 1], ['False', 'True'])
-
-		# axs[1][1].set_axis_off()
-		# text_str = '\n'.join((
-		# 	'converged in {} epochs'.format(self.converged_in),
-		# 	'loss = {:.3}'.format(self.loss),
-		# 	'accuracy = {:.3}'.format(self.acc),
-		# 	'precision = {:.3}'.format(self.precision),
-		# 	'recall = {:.3}'.format(self.recall),
-		# 	'f1 score = {:.3}'.format(self.f1score)
-		# ))
-		# axs[1][1].text(0.14, 0.3, s=text_str, size=16)
-
+		
 		fig.set_size_inches((10, 9))
 		plt.show()

@@ -5,7 +5,7 @@ import pickle
 import argparse
 
 import sys
-sys.path.append('/home/pierre-yves/Documents/Projects/mlp/src/modules')
+sys.path.append('/mnt/nfs/homes/ppajot/Documents/mlp/src/modules')
 
 from utils import split_df
 

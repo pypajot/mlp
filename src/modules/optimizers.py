@@ -11,6 +11,9 @@ def adam(mlp, batch_index, steps):
 	delta = 0
 	for i in reversed(range(1, mlp.size)):
 		delta, d_bias, d_weights = get_part_deriv(mlp, delta, batch_index, i)
+		d_bias += mlp.regul * mlp.bias[i - 1][0]
+		d_weights += mlp.regul * mlp.weights[i - 1]
+
 		mlp.mt_b[i - 1] = mlp.beta1 * mlp.mt_b[i - 1] + (1 - mlp.beta1) * d_bias
 		mlp.mt_w[i - 1] = mlp.beta1 * mlp.mt_w[i - 1] + (1 - mlp.beta1) * d_weights
 
@@ -32,15 +35,14 @@ def gradient_descent(mlp, batch_index, steps):
 	delta = 0
 	for i in reversed(range(1, mlp.size)):
 		delta, d_bias, d_weights = get_part_deriv(mlp, delta, batch_index, i)
-
-		mlp.weights[i - 1] -= mlp.weights[i - 1] * mlp.regul
-
+		d_bias += mlp.regul * mlp.bias[i - 1][0]
+		d_weights += mlp.regul * mlp.weights[i - 1]
+	
 		mlp.velocity_w[i - 1] = mlp.momentum * mlp.velocity_w[i - 1] - mlp.learning_rate * d_weights
 		mlp.velocity_b[i - 1] = mlp.momentum * mlp.velocity_b[i - 1] - mlp.learning_rate * d_bias
 		
 		mlp.weights[i - 1] += mlp.velocity_w[i - 1]
 		mlp.bias[i - 1] += mlp.velocity_b[i - 1]
-		# mlp.bias[i - 1] -= mlp.bias[i - 1] * mlp.regul / len(batch_index)
 
 
 optimizers = {
