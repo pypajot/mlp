@@ -14,7 +14,7 @@ class MultiLayerPerceptron:
 		activation_func='relu',
 		epochs = 300,
 		learning_rate = 0.01,
-		batch_size = 50,
+		batch_size = 200,
 		optimizer = 'adam',
 		regul = 0.0001,
 		seed = None,

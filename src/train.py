@@ -4,6 +4,7 @@ import pandas as pd
 import argparse
 import pickle
 import os
+import sklearn.neural_network as sk
 
 import sys
 sys.path.append('/mnt/nfs/homes/ppajot/Documents/mlp/src/modules')
@@ -84,6 +85,15 @@ def main():
 	except Exception as e:
 		print(e)
 		exit(1)
+
+
+	# scikit = sk.MLPClassifier(solver='adam', early_stopping=True)
+	# scikit.fit(train_input, train_output)
+	# import matplotlib.pyplot as plt
+	# plt.plot(scikit.loss_curve_)
+	# plt.show()
+
+
 
 	try:
 		file = open('model.pkl', 'wb')
