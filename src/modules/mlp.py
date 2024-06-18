@@ -21,6 +21,7 @@ class MultiLayerPerceptron:
 		distrib = 'XGuniform',
 		output_layer_activation='softmax',
 		momentum = 0.9,
+		nesterov=False,
 		tol = 0.0001,
 		n_iter_to_change = 10,
 		early_stopping = False,
@@ -33,6 +34,7 @@ class MultiLayerPerceptron:
 		self.batch_size = batch_size
 		self.output_layer_activation = output_layer_activation
 		self.momentum = momentum
+		self.nesterov = nesterov
 		self.regul = regul
 		self.tol = tol
 		self.n_iter_to_change = n_iter_to_change
@@ -154,6 +156,17 @@ class MultiLayerPerceptron:
 			raise ValueError('early_stopping must be a boolean')
 		self._early_stopping = e
 	
+	@property
+	def nesterov(self):
+		return self._nesterov
+
+	@nesterov.setter
+	def	nesterov(self, e):
+		if type(e) is not bool:
+			raise ValueError('nesterov must be a boolean')
+		self._nesterov = e
+	
+
 	@property
 	def distrib_name(self):
 		return self._distrib_name

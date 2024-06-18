@@ -34,7 +34,7 @@ class Metrics:
 
 	def get_confusion_and_metrics(self, mlp, output):
 		if mlp.name == None or type(mlp.name) is not str:
-			self.name = mlp.opti_name + mlp.output_layer_activation
+			self.name = mlp.opti_name + mlp.output_layer_activation + ('Nesterov' if mlp.nesterov and mlp.opti_name == 'sgd' else "")
 		else:
 			self.name = mlp.name
 		size = max(output) + 1

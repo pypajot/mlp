@@ -25,12 +25,13 @@ def main():
 	parser.add_argument('-b', '--batch_size', type=int, default=200)
 	parser.add_argument('-o', '--optimizer', default='adam')
 	parser.add_argument('-E', '--early_stopping', action='store_true')
+	parser.add_argument('-n', '--nesterov', action='store_true')
 	parser.add_argument('-A', '--output_layer_activation', default='softmax')
 	parser.add_argument('-d', '--distribution', default='XGuniform')
 	parser.add_argument('-m', '--momentum', type=float, default=0.9)
 	parser.add_argument('-r', '--regul', type=float, default=0.0001)
 	parser.add_argument('-t', '--tol', type=float, default=0.0001)
-	parser.add_argument('-n', '--n_iter_to_change', type=int, default=10)
+	parser.add_argument('-i', '--n_iter_to_change', type=int, default=10)
 	parser.add_argument('-s', '--seed', type=int, default=None)
 	parser.add_argument('-b1', '--beta1', type=float, default=0.9)
 	parser.add_argument('-b2', '--beta2', type=float, default=0.999)
@@ -68,6 +69,7 @@ def main():
 			learning_rate=args.learning_rate,
 			early_stopping=args.early_stopping,
 			momentum=args.momentum,
+			nesterov=args.nesterov,
 			regul=args.regul,
 			tol=args.tol,
 			n_iter_to_change=args.n_iter_to_change,

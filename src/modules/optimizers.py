@@ -2,9 +2,16 @@ import numpy as np
 
 def get_part_deriv(mlp, delta, batch_index, i):
 	if (i == mlp.size - 1):
+		print('ok')
 		delta = mlp.layers[i].neurons - mlp.output[batch_index]
 	else:
 		delta = mlp.layers[i].deriv_acti(mlp.layers[i].neurons) * np.dot(delta, mlp.weights[i].T)
+	print("delta" , delta.shape)
+	print("neuron", mlp.layers[i - 1].neurons.shape)
+	print("bias m", mlp.velocity_b[i - 1].shape)
+	print("momentum", (mlp.momentum * mlp.velocity_w[i - 1]).shape, '\n')
+	if mlp.opti_name == 'sgd' and mlp.nesterov:
+		delta -= mlp.momentum * (mlp.velocity_b[i - 1] + np.dot(mlp.layers[i - 1].neurons, mlp.velocity_w[i - 1]))
 	return delta, np.mean(delta, 0), np.dot(mlp.layers[i - 1].neurons.T, delta) / len(batch_index)
 
 def adam(mlp, batch_index, steps):
