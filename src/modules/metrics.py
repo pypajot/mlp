@@ -34,7 +34,7 @@ class Metrics:
 
 	def get_confusion_and_metrics(self, mlp, output):
 		if mlp.name == None or type(mlp.name) is not str:
-			self.name = mlp.opti_name + mlp.output_layer_activation + ('Nesterov' if mlp.nesterov and mlp.opti_name == 'sgd' else "")
+			self.name = mlp.opti_name + mlp.output_layer_activation
 		else:
 			self.name = mlp.name
 		size = max(output) + 1
@@ -47,10 +47,10 @@ class Metrics:
 			self.confusion_matrix[output[i]][np.argmax(mlp.layers[-1].neurons[i])] += 1
 		
 		self.loss /= mlp.layers[-1].neurons.shape[0]
-		# self.test_acc = self.test_acc[:self.converged_in]
-		# self.test_loss = self.test_loss[:self.converged_in]
-		# self.train_acc = self.train_acc[:self.converged_in]
-		# self.train_loss = self.train_loss[:self.converged_in]
+		self.test_acc = self.test_acc[:self.converged_in]
+		self.test_loss = self.test_loss[:self.converged_in]
+		self.train_acc = self.train_acc[:self.converged_in]
+		self.train_loss = self.train_loss[:self.converged_in]
 		if size == 2:
 			self.acc = (self.confusion_matrix[0][0] + self.confusion_matrix[1][1]) / np.sum(self.confusion_matrix)
 			self.precision = self.confusion_matrix[1][1] / (self.confusion_matrix[1][1] + self.confusion_matrix[1][0])

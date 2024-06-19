@@ -19,14 +19,13 @@ def main():
 	)
 	parser.add_argument('data_train')
 	parser.add_argument('data_test')
-	parser.add_argument('-L', '--layers', type=tuple[int, ...], default=(100, 100))
+	parser.add_argument('-L', '--layers',nargs='+', type=int, default=[100, 100])
 	parser.add_argument('-e', '--epochs', type=int, default=300)
 	parser.add_argument('-l', '--learning_rate', type=float, default=0.001)
 	parser.add_argument('-a', '--activation', default='relu')
 	parser.add_argument('-b', '--batch_size', type=int, default=200)
 	parser.add_argument('-o', '--optimizer', default='adam')
 	parser.add_argument('-E', '--early_stopping', action='store_true')
-	parser.add_argument('-n', '--nesterov', action='store_true')
 	parser.add_argument('-A', '--output_layer_activation', default='softmax')
 	parser.add_argument('-d', '--distribution', default='XGuniform')
 	parser.add_argument('-m', '--momentum', type=float, default=0.9)
@@ -70,7 +69,6 @@ def main():
 			learning_rate=args.learning_rate,
 			early_stopping=args.early_stopping,
 			momentum=args.momentum,
-			nesterov=args.nesterov,
 			regul=args.regul,
 			tol=args.tol,
 			n_iter_to_change=args.n_iter_to_change,
@@ -85,14 +83,6 @@ def main():
 	except Exception as e:
 		print(e)
 		exit(1)
-
-
-	# scikit = sk.MLPClassifier(solver='adam', early_stopping=True)
-	# scikit.fit(train_input, train_output)
-	# import matplotlib.pyplot as plt
-	# plt.plot(scikit.loss_curve_)
-	# plt.show()
-
 
 
 	try:

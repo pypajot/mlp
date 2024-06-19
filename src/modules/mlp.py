@@ -21,7 +21,6 @@ class MultiLayerPerceptron:
 		distrib = 'XGuniform',
 		output_layer_activation='softmax',
 		momentum = 0.9,
-		nesterov=False,
 		tol = 0.0001,
 		n_iter_to_change = 10,
 		early_stopping = False,
@@ -34,7 +33,7 @@ class MultiLayerPerceptron:
 		self.batch_size = batch_size
 		self.output_layer_activation = output_layer_activation
 		self.momentum = momentum
-		self.nesterov = nesterov
+		self.activation_func = activation_func
 		self.regul = regul
 		self.tol = tol
 		self.n_iter_to_change = n_iter_to_change
@@ -107,6 +106,16 @@ class MultiLayerPerceptron:
 		self._output_layer_activation = e
 	
 	@property
+	def output_layer_activation(self):
+		return self._output_layer_activation
+
+	@output_layer_activation.setter
+	def	output_layer_activation(self, e):
+		if e not in ['softmax', 'sigmoid', 'relu', 'tanh']:
+			raise ValueError('activation function must be relu, softmax or sigmoid')
+		self._output_layer_activation = e
+
+	@property
 	def momentum(self):
 		return self._momentum
 
@@ -155,17 +164,6 @@ class MultiLayerPerceptron:
 		if type(e) is not bool:
 			raise ValueError('early_stopping must be a boolean')
 		self._early_stopping = e
-	
-	@property
-	def nesterov(self):
-		return self._nesterov
-
-	@nesterov.setter
-	def	nesterov(self, e):
-		if type(e) is not bool:
-			raise ValueError('nesterov must be a boolean')
-		self._nesterov = e
-	
 
 	@property
 	def distrib_name(self):
@@ -280,6 +278,7 @@ class MultiLayerPerceptron:
 		no_changes = 0
 		self.batch_size = min(self.batch_size, self.size_input)
 		for i in range (1, self.epochs + 1):
+
 			batch_set = batch_init(self.input.shape[0])
 			self.metrics.loss = 0
 			self.metrics.acc = 0
@@ -287,13 +286,17 @@ class MultiLayerPerceptron:
 				batch_index = get_batch(batch_set, self.batch_size)
 				input = self.input[batch_index]
 				self.__feedforward(input)
+
 				self.metrics.get_train_loss_and_acc(self, batch_index)
 				steps += 1
 				self.__backprop(batch_index, steps)
+
 			self.metrics.add_loss_acc()
 			self.__feedforward(self.test_input)
 			self.metrics.get_test_loss_and_acc(self)
+
 			print('epochs: {}/{} - loss: {:.4} - val_loss: {:.4}'.format(i, self.epochs, self.metrics.train_loss[-1], self.metrics.test_loss[-1]))
+
 			no_changes = self.__check_early_stopping(self.metrics, no_changes, i)
 			if no_changes >= self.n_iter_to_change:
 				print('Stopped early at epoch', self.best_epoch if self.early_stopping else i)
@@ -302,6 +305,7 @@ class MultiLayerPerceptron:
 					self.bias = [b.copy() for b in self.best_bias]
 					self.__feedforward(self.test_input)
 				break
+	
 		self.converged_in = self.best_epoch if self.early_stopping else i
 		self.metrics.get_confusion_and_metrics(self, self.test_output)
 

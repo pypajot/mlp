@@ -1,11 +1,11 @@
 import numpy as np
 
 def normal(rng, F_in, F_out):
-	limit = 0.4
+	limit = np.sqrt(1 / (F_in + F_out))
 	return rng.normal(0.0, limit, (F_in, F_out))
 
 def uniform(rng, F_in, F_out):
-	limit = 0.2
+	limit = np.sqrt(1 / (F_in + F_out))
 	return rng.uniform(-limit, limit, (F_in, F_out))
 
 def	LCnormal(rng, F_in, F_out):
