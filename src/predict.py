@@ -35,32 +35,32 @@ def	main():
 		print(e)
 		exit(1)
 
-	try:
-		norm_file = open('norm.pkl', 'rb')
-		norm = pickle.load(norm_file)
-	except Exception as e:
-		print('Error opening norm.pkl')
-		print(e)
-		exit(1)
+	# try:
+	# 	norm_file = open('norm.pkl', 'rb')
+	# 	norm = pickle.load(norm_file)
+	# except Exception as e:
+	# 	print('Error opening norm.pkl')
+	# 	print(e)
+	# 	exit(1)
 
-	try:
-		for i in input.columns:
-			input[i] = (input[i] - norm['mean'][i - 2]) / norm['std'][i - 2]
-	except Exception as e:
-		print('Error normalizing data')
-		print(e)
-		exit(1)
+	# try:
+	# 	for i in input.columns:
+	# 		input[i] = (input[i] - norm['mean'][i - 2]) / norm['std'][i - 2]
+	# except Exception as e:
+	# 	print('Error normalizing data')
+	# 	print(e)
+	# 	exit(1)
 	
-	try:
-		model.predict(input, output)
-		model.metrics.get_confusion_and_metrics(model, model.predict_output)
-		fig, axs = plt.subplots(1, 2)
-		model.metrics.show_confusion_and_metrics(axs[0], axs[1])
-		plt.show()
-	except Exception as e:
-		print('Error during prediction')
-		print(e)
-		exit(2)
+	# try:
+	model.predict(input, output)
+	model.metrics.get_confusion_and_metrics(model, model.predict_output)
+	fig, axs = plt.subplots(1, 2)
+	model.metrics.show_confusion_and_metrics(axs[0], axs[1])
+	plt.show()
+	# except Exception as e:
+	# 	print('Error during prediction')
+	# 	print(e)
+	# 	exit(2)
 
 
 if __name__ == '__main__':

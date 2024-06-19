@@ -26,7 +26,8 @@ class MultiLayerPerceptron:
 		early_stopping = False,
 		beta1 = 0.9,
 		beta2 = 0.999,
-		name=None
+		name=None,
+		split=0.8
 	):
 		self.epochs = epochs
 		self.learning_rate = learning_rate
@@ -61,6 +62,7 @@ class MultiLayerPerceptron:
 		self.converged_in = 0
 		self.rng = np.random.default_rng(seed)
 		self.name = name
+		self.split=split
 		for size in layers_sizes:
 			self.add_layer(size, activation_func)
 
@@ -125,6 +127,16 @@ class MultiLayerPerceptron:
 			raise ValueError('momentum must be between 0 and 1')
 		self._momentum = e
 	
+	@property
+	def split(self):
+		return self._split
+
+	@split.setter
+	def	split(self, e):
+		if e <= 0 or e >= 1:
+			raise ValueError('split must be between 0 and 1')
+		self._split = e
+
 	@property
 	def tol(self):
 		return self._tol
@@ -205,20 +217,53 @@ class MultiLayerPerceptron:
 			raise ValueError('beta2 must be between 0 and 1')
 		self._beta2 = b
 	
+	def	_normalize(self, train_input):
+		self.norm = {
+			'mean': [],
+			'std': []
+		}
+		for i in train_input.columns[:]:
+			self.norm['mean'].append(train_input[i].mean())
+			self.norm['std'].append(train_input[i].std())
+			train_input[i] = (train_input[i] - train_input[i].mean()) / train_input[i].std()
+
+		return train_input
+
+	def	_seperate(self, train_input, train_output):
+
+		size = len(train_input)
+		indexes = list(range(size))
+		self.rng.shuffle(indexes)
+		shuffled_input = np.array(train_input)[indexes]
+		shuffled_output = np.array(train_output)[indexes]
+		new_train_input = shuffled_input[:int(self.split * size)]
+		new_train_output = shuffled_output[:int(self.split * size)]
+		test_input = shuffled_input[int(self.split * size):]
+		test_output = shuffled_output[int(self.split * size):]
+
+		return new_train_input, new_train_output, test_input, test_output
 	
-	def	__init_data(self, train_input, train_output, test_input, test_output):
+	def	__init_data(self, train_input, train_output):
+
+		train_input = self._normalize(train_input)
+		# print(train_input)
+		train_input, train_output, test_input, test_output = self._seperate(train_input, train_output)
+
 		self.input = np.array(train_input)
 		self.size_input = train_input.shape[1]
+		self.input_nb = train_input.shape[0]
 		self.layers.insert(0, Layer(self.size_input))
 		self.layers_sizes.insert(0, self.size_input)
 
 		self.train_output = np.array(train_output)
-		self.output = np.zeros((train_output.size, train_output.max() + 1))
-		self.output[np.arange(train_output.size), train_output] = 1
+
 		if self.output_layer_activation == 'softmax':
+			self.output = np.zeros((train_output.size, train_output.max() + 1))
+			self.output[np.arange(train_output.size), train_output] = 1
 			self.possible_output = np.unique(train_output)
 			self.size_output = len(self.possible_output)
 		else:
+			self.output = np.array([[o] for o in train_output])
 			self.size_output = 1
 		self.layers.append(Layer(self.size_output, self.output_layer_activation))
 		self.layers_sizes.append(self.size_output)
@@ -246,8 +291,9 @@ class MultiLayerPerceptron:
 		self.layers_sizes.append(size)
 		self.size += 1
 
-	def fit(self, train_input, train_output, test_input, test_output):
-		self.__init_data(train_input, train_output, test_input, test_output)
+
+	def fit(self, train_input, train_output):
+		self.__init_data(train_input, train_output)
 		self.__init_weights()
 		self.__train()
 
@@ -276,7 +322,7 @@ class MultiLayerPerceptron:
 		self.metrics = Metrics(self.output_layer_activation)
 		steps = 0
 		no_changes = 0
-		self.batch_size = min(self.batch_size, self.size_input)
+		self.batch_size = min(self.batch_size, self.input_nb)
 		for i in range (1, self.epochs + 1):
 
 			batch_set = batch_init(self.input.shape[0])
@@ -291,7 +337,7 @@ class MultiLayerPerceptron:
 				steps += 1
 				self.__backprop(batch_index, steps)
 
-			self.metrics.add_loss_acc()
+			self.metrics.add_loss_acc(self.input_nb)
 			self.__feedforward(self.test_input)
 			self.metrics.get_test_loss_and_acc(self)
 
@@ -310,6 +356,8 @@ class MultiLayerPerceptron:
 		self.metrics.get_confusion_and_metrics(self, self.test_output)
 
 	def	predict(self, input, output):
+		for i in input.columns:
+			input[i] = (input[i] - self.norm['mean'][i - 2]) / self.norm['std'][i - 2]
 		if self.converged_in == 0:
 			print("Can't predict on an untrained model")
 			return

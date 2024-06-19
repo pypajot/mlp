@@ -18,7 +18,7 @@ def main():
 		description='Train a MLPClassifier on some data'
 	)
 	parser.add_argument('data_train')
-	parser.add_argument('data_test')
+	# parser.add_argument('data_test')
 	parser.add_argument('-L', '--layers',nargs='+', type=int, default=[100, 100])
 	parser.add_argument('-e', '--epochs', type=int, default=300)
 	parser.add_argument('-l', '--learning_rate', type=float, default=0.001)
@@ -33,6 +33,7 @@ def main():
 	parser.add_argument('-t', '--tol', type=float, default=0.0001)
 	parser.add_argument('-i', '--n_iter_to_change', type=int, default=10)
 	parser.add_argument('-s', '--seed', type=int, default=None)
+	parser.add_argument('-S', '--split', type=float, default=0.8)
 	parser.add_argument('-b1', '--beta1', type=float, default=0.9)
 	parser.add_argument('-b2', '--beta2', type=float, default=0.999)
 	parser.add_argument('-N', '--name', default=None)
@@ -50,39 +51,39 @@ def main():
 		exit(2)
 
 
-	try:
-		data_test = pd.read_csv(args.data_test, header = None)
-		test_output = data_test[1]
-		test_input = data_test.drop(columns=[0, 1])
-	except Exception:
-		print('test data is invalid')
-		exit(2)
+	# try:
+	# 	data_test = pd.read_csv(args.data_test, header = None)
+	# 	test_output = data_test[1]
+	# 	test_input = data_test.drop(columns=[0, 1])
+	# except Exception:
+	# 	print('test data is invalid')
+	# 	exit(2)
 
-	try:
-		model = MultiLayerPerceptron(
-			layers_sizes=args.layers,
-			optimizer=args.optimizer,
-			epochs=args.epochs,
-			activation_func=args.activation,
-			output_layer_activation=args.output_layer_activation,
-			batch_size=args.batch_size,
-			learning_rate=args.learning_rate,
-			early_stopping=args.early_stopping,
-			momentum=args.momentum,
-			regul=args.regul,
-			tol=args.tol,
-			n_iter_to_change=args.n_iter_to_change,
-			beta1=args.beta1,
-			beta2=args.beta2,
-			distrib=args.distribution,
-			seed=args.seed,
-			name=args.name
-		)
-		model.fit(train_input, train_output, test_input, test_output)
-		model.metrics.show()
-	except Exception as e:
-		print(e)
-		exit(1)
+	# try:
+	model = MultiLayerPerceptron(
+		layers_sizes=args.layers,
+		optimizer=args.optimizer,
+		epochs=args.epochs,
+		activation_func=args.activation,
+		output_layer_activation=args.output_layer_activation,
+		batch_size=args.batch_size,
+		learning_rate=args.learning_rate,
+		early_stopping=args.early_stopping,
+		momentum=args.momentum,
+		regul=args.regul,
+		tol=args.tol,
+		n_iter_to_change=args.n_iter_to_change,
+		beta1=args.beta1,
+		beta2=args.beta2,
+		distrib=args.distribution,
+		seed=args.seed,
+		name=args.name
+	)
+	model.fit(train_input, train_output)
+	model.metrics.show()
+	# except Exception as e:
+	# 	print(e)
+	# 	exit(1)
 
 
 	try:

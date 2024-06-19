@@ -24,8 +24,12 @@ class Metrics:
 		acc = 0
 		
 		for i in range (mlp.layers[-1].neurons.shape[0]):
+			# print(mlp.layers[-1].neurons[i], mlp.test_output[i])
 			loss += self.loss_func(mlp.layers[-1].neurons[i], mlp.test_output[i])
-			acc += mlp.test_output[i] == np.argmax(mlp.layers[-1].neurons[i])
+			if mlp.output_layer_activation == 'softmax':
+				acc += mlp.test_output[i] == np.argmax(mlp.layers[-1].neurons[i])
+			else:
+				acc += mlp.test_output[i] == round(mlp.layers[-1].neurons[i][0])
 		loss /= mlp.layers[-1].neurons.shape[0]
 		acc /= mlp.layers[-1].neurons.shape[0]
 
@@ -44,8 +48,10 @@ class Metrics:
 		self.loss = 0
 		for i in range (mlp.layers[-1].neurons.shape[0]):
 			self.loss += self.loss_func(mlp.layers[-1].neurons[i], output[i])
-			self.confusion_matrix[output[i]][np.argmax(mlp.layers[-1].neurons[i])] += 1
-		
+			if mlp.output_layer_activation == 'softmax':
+				self.confusion_matrix[output[i]][np.argmax(mlp.layers[-1].neurons[i])] += 1
+			else:
+				self.confusion_matrix[output[i]][round(mlp.layers[-1].neurons[i][0])] += 1
 		self.loss /= mlp.layers[-1].neurons.shape[0]
 		self.test_acc = self.test_acc[:self.converged_in]
 		self.test_loss = self.test_loss[:self.converged_in]
@@ -66,18 +72,23 @@ class Metrics:
 
 	def get_train_loss_and_acc(self, mlp, batch_index):
 		for i in batch_index:
-			self.loss += self.loss_func(mlp.layers[-1].neurons[batch_index.index(i)], mlp.train_output[i]) / mlp.train_output.size
-			self.acc += (mlp.train_output[i] == np.argmax(mlp.layers[mlp.size - 1].neurons[batch_index.index(i)])) / mlp.train_output.size
+			self.loss += self.loss_func(mlp.layers[-1].neurons[batch_index.index(i)], mlp.train_output[i])
+			if mlp.output_layer_activation == 'softmax':
+				self.acc += (mlp.train_output[i] == np.argmax(mlp.layers[-1].neurons[batch_index.index(i)]))
+			else:
+				self.acc += (mlp.train_output[i] == round(mlp.layers[-1].neurons[batch_index.index(i)][0]))
 
-	def add_loss_acc(self):
-		self.train_loss.append(self.loss)
-		self.train_acc.append(self.acc)
+	def add_loss_acc(self, out_size):
+		self.train_loss.append(self.loss / out_size)
+		self.train_acc.append(self.acc / out_size)
 
 	def	show_confusion_and_metrics(self, plot_1, plot_2):
+
 		plot_1.matshow(self.confusion_matrix, cmap=plt.cm.Blues)
 		for i in range(self.confusion_matrix.shape[0]):
 			for j in range(self.confusion_matrix.shape[0]):
 				plot_1.text(i, j, int(self.confusion_matrix[j, i]), va='center', ha='center', size=15)
+
 		plot_1.set_xlabel('expected')
 		plot_1.set_ylabel('prediction')
 		plot_1.set_xticks([0, 1], ['False', 'True'])
