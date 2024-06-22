@@ -11,6 +11,7 @@ def adam(mlp, batch_index, steps):
 	delta = 0
 	for i in reversed(range(1, mlp.size)):
 		delta, d_bias, d_weights = get_part_deriv(mlp, delta, batch_index, i)
+		
 		d_bias += mlp.regul * mlp.bias[i - 1][0]
 		d_weights += mlp.regul * mlp.weights[i - 1]
 

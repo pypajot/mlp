@@ -229,7 +229,7 @@ class MultiLayerPerceptron:
 
 		return train_input
 
-	def	_seperate(self, train_input, train_output):
+	def	_separate(self, train_input, train_output):
 
 		size = len(train_input)
 		indexes = list(range(size))
@@ -247,29 +247,26 @@ class MultiLayerPerceptron:
 
 		train_input = self._normalize(train_input)
 		# print(train_input)
-		train_input, train_output, test_input, test_output = self._seperate(train_input, train_output)
+		train_input, train_output, test_input, test_output = self._separate(train_input, train_output)
 
 		self.input = np.array(train_input)
-		self.size_input = train_input.shape[1]
-		self.input_nb = train_input.shape[0]
-		self.layers.insert(0, Layer(self.size_input))
-		self.layers_sizes.insert(0, self.size_input)
+		self.nb_params = train_input.shape[1]
+		self.nb_samples = train_input.shape[0]
+		self.layers.insert(0, Layer(self.nb_params))
+		self.layers_sizes.insert(0, self.nb_params)
 
-		self.train_output = np.array(train_output)
-
+		self.unique, self.train_output = np.unique(train_output, return_inverse=True)
 		if self.output_layer_activation == 'softmax':
-			self.output = np.zeros((train_output.size, train_output.max() + 1))
-			self.output[np.arange(train_output.size), train_output] = 1
-			self.possible_output = np.unique(train_output)
-			self.size_output = len(self.possible_output)
+			self.size_output = len(self.unique)
+			self.output = np.eye(self.size_output)[self.train_output]
 		else:
-			self.output = np.array([[o] for o in train_output])
 			self.size_output = 1
+			self.output = np.array([[o] for o in self.train_output])
 		self.layers.append(Layer(self.size_output, self.output_layer_activation))
 		self.layers_sizes.append(self.size_output)
 
 		self.test_input = test_input
-		self.test_output = test_output
+		self.test_output = [np.where(self.unique == o)[0][0] for o in test_output]
 
 	def	__init_weights(self):
 		for i in range (1, len(self.layers_sizes)):
@@ -282,9 +279,8 @@ class MultiLayerPerceptron:
 			self.weights.append(weights)
 			bias = np.array(self.distrib(self.rng, 1, self.layers_sizes[i]))
 			self.bias.append(bias)
-			if self.momentum != 0:
-				self.velocity_w.append(np.zeros(weights.shape))
-				self.velocity_b.append(np.zeros(bias.shape))
+			self.velocity_w.append(np.zeros(weights.shape))
+			self.velocity_b.append(np.zeros(bias.shape))
 
 	def	add_layer(self, size, function):
 		self.layers.append(Layer(size, function))
@@ -322,7 +318,7 @@ class MultiLayerPerceptron:
 		self.metrics = Metrics(self.output_layer_activation)
 		steps = 0
 		no_changes = 0
-		self.batch_size = min(self.batch_size, self.input_nb)
+		self.batch_size = min(self.batch_size, self.nb_samples)
 		for i in range (1, self.epochs + 1):
 
 			batch_set = batch_init(self.input.shape[0])
@@ -337,11 +333,16 @@ class MultiLayerPerceptron:
 				steps += 1
 				self.__backprop(batch_index, steps)
 
-			self.metrics.add_loss_acc(self.input_nb)
+			self.metrics.add_loss_acc(self.nb_samples)
 			self.__feedforward(self.test_input)
-			self.metrics.get_test_loss_and_acc(self)
+			if self.early_stopping:
+				self.metrics.get_test_loss_and_acc(self)
 
-			print('epochs: {}/{} - loss: {:.4} - val_loss: {:.4}'.format(i, self.epochs, self.metrics.train_loss[-1], self.metrics.test_loss[-1]))
+			print(
+				'epochs: {}/{}'.format(i, self.epochs),
+				' - loss: {:.4}'.format(self.metrics.train_loss[-1]),
+				' - val_loss: {:.4}'.format(self.metrics.test_loss[-1]) if self.early_stopping else ""
+			),
 
 			no_changes = self.__check_early_stopping(self.metrics, no_changes, i)
 			if no_changes >= self.n_iter_to_change:
@@ -352,8 +353,11 @@ class MultiLayerPerceptron:
 					self.__feedforward(self.test_input)
 				break
 	
-		self.converged_in = self.best_epoch if self.early_stopping else i
-		self.metrics.get_confusion_and_metrics(self, self.test_output)
+		if self.early_stopping:
+			self.converged_in = self.best_epoch
+			self.metrics.get_confusion_and_metrics(self, self.test_output)
+		else:
+			self.converged_in = i
 
 	def	predict(self, input, output):
 		for i in input.columns:

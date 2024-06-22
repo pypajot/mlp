@@ -107,7 +107,7 @@ class Metrics:
 		plot_2.text(0.14, 0.32, s=text_str, size=16)
 		plot_2.set_title('Evaluation metrics')
 
-	def show(self):
+	def show(self, early_stopping):
 		fig, axs = plt.subplots(2, 2)
 		axs[0][0].plot(range(1, 1 + len(self.train_loss)), self.train_loss, label='train')
 		axs[0][0].plot(range(1, 1 + len(self.test_loss)), self.test_loss, label='validation')
@@ -125,7 +125,11 @@ class Metrics:
 		axs[0][1].legend()
 		axs[0][1].set_title('accuracy')
 
-		self.show_confusion_and_metrics(axs[1][0], axs[1][1])
+		if early_stopping:
+			self.show_confusion_and_metrics(axs[1][0], axs[1][1])
+		else:
+			axs[1][0].set_axis_off()
+			axs[1][1].set_axis_off()
 		
 		fig.set_size_inches((10, 9))
 		plt.show()

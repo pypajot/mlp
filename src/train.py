@@ -7,7 +7,8 @@ import os
 import sklearn.neural_network as sk
 
 import sys
-sys.path.append('/mnt/nfs/homes/ppajot/Documents/mlp/src/modules')
+# sys.path.append('/mnt/nfs/homes/ppajot/Documents/mlp/src/modules')
+sys.path.append('/home/pierre-yves/Documents/Projects/mlp/src/modules')
 
 from mlp import MultiLayerPerceptron
 
@@ -18,7 +19,7 @@ def main():
 		description='Train a MLPClassifier on some data'
 	)
 	parser.add_argument('data_train')
-	# parser.add_argument('data_test')
+	# parser.add_argument('data_validation')
 	parser.add_argument('-L', '--layers',nargs='+', type=int, default=[100, 100])
 	parser.add_argument('-e', '--epochs', type=int, default=300)
 	parser.add_argument('-l', '--learning_rate', type=float, default=0.001)
@@ -42,19 +43,21 @@ def main():
 
 	args = parser.parse_args()
 
-	try:
-		data_train = pd.read_csv(args.data_train, header = None)
-		train_output = data_train[1]
-		train_input = data_train.drop(columns=[0, 1])
-	except Exception:
-		print('training data is invalid')
-		exit(2)
-
+	# try:
+	data_train = pd.read_csv(args.data_train, header = None)
+	# data_train[data_train == 'B'] = 0
+	# data_train[data_train == 'M'] = 1
+	train_output = data_train[1]
+	train_input = data_train.drop(columns=[0, 1])
+	# print(train_output)
+	# except Exception:
+	# 	print('training data is invalid')
+	# 	exit(2)
 
 	# try:
-	# 	data_test = pd.read_csv(args.data_test, header = None)
-	# 	test_output = data_test[1]
-	# 	test_input = data_test.drop(columns=[0, 1])
+	# 	data_validation = pd.read_csv(args.data_validation, header = None)
+	# 	test_output = data_validation[1]
+	# 	test_input = data_validation.drop(columns=[0, 1])
 	# except Exception:
 	# 	print('test data is invalid')
 	# 	exit(2)
@@ -80,7 +83,7 @@ def main():
 		name=args.name
 	)
 	model.fit(train_input, train_output)
-	model.metrics.show()
+	model.metrics.show(model.early_stopping)
 	# except Exception as e:
 	# 	print(e)
 	# 	exit(1)

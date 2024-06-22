@@ -5,21 +5,22 @@ import pickle
 import argparse
 
 import sys
-sys.path.append('/mnt/nfs/homes/ppajot/Documents/mlp/src/modules')
+# sys.path.append('/mnt/nfs/homes/ppajot/Documents/mlp/src/modules')
+sys.path.append('/home/pierre-yves/Documents/Projects/mlp/src/modules')
 
 from utils import split_df
 
-def seperate(file, split, seed):
-	negatives = file[file[1] == 0]
-	positives = file[file[1] == 1]
+def separate(file, split, seed):
+	negatives = file[file[1] == 'B']
+	positives = file[file[1] == 'M']
 
 	negatives_train, negatives_test = split_df(negatives, split, seed)
 	positives_train, positives_test = split_df(positives, split, seed)
 
 	data_train = pd.concat([negatives_train, positives_train])
-	data_test = pd.concat([negatives_test, positives_test])
+	data_validation = pd.concat([negatives_test, positives_test])
 
-	return data_train, data_test
+	return data_train, data_validation
 
 def main():
 
@@ -40,8 +41,8 @@ def main():
 		print(e)
 		exit(1)
 
-	file[file == 'B'] = 0
-	file[file == 'M'] = 1
+	# file[file == 'B'] = 0
+	# file[file == 'M'] = 1
 
 	norm = {
 		'mean': [],
@@ -66,7 +67,7 @@ def main():
 	# 	print(e)
 	# 	exit(1)
 
-	data_train, data_test = seperate(file, split, seed)
+	data_train, data_validation = separate(file, split, seed)
 
 	# negatives = file[file[1] == 0]
 	# positives = file[file[1] == 1]
@@ -75,10 +76,10 @@ def main():
 	# positives_train, positives_test = split_df(positives, split, seed)
 
 	# data_train = pd.concat([negatives_train, positives_train])
-	# data_test = pd.concat([negatives_test, positives_test])
+	# data_validation = pd.concat([negatives_test, positives_test])
 
 	data_train.to_csv('data_train.csv', header = False, index = False)
-	data_test.to_csv('data_test.csv', header = False, index = False)
+	data_validation.to_csv('data_validation.csv', header = False, index = False)
 
 if __name__ == '__main__':
 	main()
