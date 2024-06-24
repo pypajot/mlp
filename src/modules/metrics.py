@@ -2,10 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
-from loss import loss_func
+from modules.loss import loss_func
 
 class Metrics:
-	def	__init__(self, activation):
+	def	__init__(self, name, activation):
 		self.acc = 0
 		self.loss = 0
 		self.loss_func = loss_func[activation]
@@ -17,7 +17,7 @@ class Metrics:
 		self.test_recall = 0
 		self.test_f1score = 0
 		self.confusion_matrix = np.empty((0, 0))
-		self.name = None
+		self.name = name
 
 	def get_test_loss_and_acc(self, mlp):
 		loss = 0
@@ -37,10 +37,6 @@ class Metrics:
 		self.test_acc.append(acc)
 
 	def get_confusion_and_metrics(self, mlp, output):
-		if mlp.name == None or type(mlp.name) is not str:
-			self.name = mlp.opti_name + mlp.output_layer_activation
-		else:
-			self.name = mlp.name
 		size = max(output) + 1
 		self.converged_in = mlp.converged_in
 		self.confusion_matrix = np.zeros((size, size))
@@ -83,7 +79,7 @@ class Metrics:
 		self.train_acc.append(self.acc / out_size)
 
 	def	show_confusion_and_metrics(self, plot_1, plot_2):
-
+		
 		plot_1.matshow(self.confusion_matrix, cmap=plt.cm.Blues)
 		for i in range(self.confusion_matrix.shape[0]):
 			for j in range(self.confusion_matrix.shape[0]):

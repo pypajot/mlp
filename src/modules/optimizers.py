@@ -43,8 +43,13 @@ def gradient_descent(mlp, batch_index, steps):
 		mlp.velocity_w[i - 1] = mlp.momentum * mlp.velocity_w[i - 1] + mlp.learning_rate * d_weights
 		mlp.velocity_b[i - 1] = mlp.momentum * mlp.velocity_b[i - 1] + mlp.learning_rate * d_bias
 
-		mlp.weights[i - 1] -= mlp.velocity_w[i - 1]
-		mlp.bias[i - 1] -= mlp.velocity_b[i - 1]
+
+		if mlp.nesterov:
+			mlp.weights[i - 1] -= mlp.momentum * mlp.velocity_w[i - 1] + mlp.learning_rate * d_weights
+			mlp.bias[i - 1] -= mlp.momentum * mlp.velocity_b[i - 1] + mlp.learning_rate * d_bias
+		else:
+			mlp.weights[i - 1] -= mlp.velocity_w[i - 1]
+			mlp.bias[i - 1] -= mlp.velocity_b[i - 1]
 
 
 optimizers = {

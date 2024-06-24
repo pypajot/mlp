@@ -1,10 +1,10 @@
 import numpy as np
 
-from optimizers import optimizers
-from layer import Layer
-from metrics import Metrics
-from distribution import distribution
-from utils import batch_init, get_batch
+from modules.optimizers import optimizers
+from modules.layer import Layer
+from modules.metrics import Metrics
+from modules.distribution import distribution
+from modules.utils import batch_init, get_batch
 
 
 class MultiLayerPerceptron:
@@ -12,20 +12,21 @@ class MultiLayerPerceptron:
 		self,
 		layers_sizes=(100, 100),
 		activation_func='relu',
-		epochs = 300,
-		learning_rate = 0.01,
-		batch_size = 200,
-		optimizer = 'adam',
-		regul = 0.0001,
-		seed = None,
-		distrib = 'XGuniform',
+		epochs=300,
+		learning_rate=0.01,
+		batch_size=200,
+		optimizer='adam',
+		regul=0.0001,
+		seed=None,
+		distrib='XGuniform',
 		output_layer_activation='softmax',
-		momentum = 0.9,
-		tol = 0.0001,
-		n_iter_to_change = 10,
-		early_stopping = False,
-		beta1 = 0.9,
-		beta2 = 0.999,
+		momentum=0.9,
+		nesterov=False,
+		tol=0.0001,
+		n_iter_to_change=10,
+		early_stopping=False,
+		beta1=0.9,
+		beta2=0.999,
 		name=None,
 		split=0.8
 	):
@@ -34,6 +35,7 @@ class MultiLayerPerceptron:
 		self.batch_size = batch_size
 		self.output_layer_activation = output_layer_activation
 		self.momentum = momentum
+		self.nesterov = nesterov
 		self.activation_func = activation_func
 		self.regul = regul
 		self.tol = tol
@@ -62,7 +64,7 @@ class MultiLayerPerceptron:
 		self.converged_in = 0
 		self.rng = np.random.default_rng(seed)
 		self.name = name
-		self.split=split
+		self.split = split
 		for size in layers_sizes:
 			self.add_layer(size, activation_func)
 
@@ -178,6 +180,16 @@ class MultiLayerPerceptron:
 		self._early_stopping = e
 
 	@property
+	def nesterov(self):
+		return self._nesterov
+
+	@nesterov.setter
+	def	nesterov(self, e):
+		if type(e) is not bool:
+			raise ValueError('nesterov must be a boolean')
+		self._nesterov = e
+
+	@property
 	def distrib_name(self):
 		return self._distrib_name
 
@@ -246,7 +258,6 @@ class MultiLayerPerceptron:
 	def	__init_data(self, train_input, train_output):
 
 		train_input = self._normalize(train_input)
-		# print(train_input)
 		train_input, train_output, test_input, test_output = self._separate(train_input, train_output)
 
 		self.input = np.array(train_input)
@@ -315,7 +326,9 @@ class MultiLayerPerceptron:
 		return no_changes
 
 	def	__train(self):
-		self.metrics = Metrics(self.output_layer_activation)
+		if self.name == None or type(self.name) is not str:
+			self.name = self.opti_name + self.output_layer_activation
+		self.metrics = Metrics(self.name, self.output_layer_activation)
 		steps = 0
 		no_changes = 0
 		self.batch_size = min(self.batch_size, self.nb_samples)
@@ -325,10 +338,11 @@ class MultiLayerPerceptron:
 			self.metrics.loss = 0
 			self.metrics.acc = 0
 			while (batch_set):
+
 				batch_index = get_batch(batch_set, self.batch_size)
 				input = self.input[batch_index]
-				self.__feedforward(input)
 
+				self.__feedforward(input)
 				self.metrics.get_train_loss_and_acc(self, batch_index)
 				steps += 1
 				self.__backprop(batch_index, steps)
