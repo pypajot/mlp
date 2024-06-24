@@ -19,7 +19,10 @@ def separate(file, split, seed):
 
 def main():
 
-	parser = argparse.ArgumentParser('Normalizes and split data into train and test files')
+	parser = argparse.ArgumentParser(
+		prog='seperate.py',
+		description='Split data into train and validation files'
+	)
 	parser.add_argument('data')
 	parser.add_argument('-s', '--split', type=float, default=0.8)
 	parser.add_argument('-r', '--random-seed', type=int, default=None)

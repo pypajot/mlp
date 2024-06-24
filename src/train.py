@@ -5,7 +5,7 @@ import argparse
 import pickle
 import os
 
-from modules.mlp import MultiLayerPerceptron
+from modules.mlp import MultiLayerPerceptronClassifier
 
 def main():
 
@@ -47,7 +47,7 @@ def main():
 		exit(2)
 
 	try:
-		model = MultiLayerPerceptron(
+		model = MultiLayerPerceptronClassifier(
 			layers_sizes=args.layers,
 			optimizer=args.optimizer,
 			epochs=args.epochs,

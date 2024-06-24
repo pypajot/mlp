@@ -7,7 +7,7 @@ from modules.distribution import distribution
 from modules.utils import batch_init, get_batch
 
 
-class MultiLayerPerceptron:
+class MultiLayerPerceptronClassifier:
 	def __init__(
 		self,
 		layers_sizes=(100, 100),
@@ -110,14 +110,14 @@ class MultiLayerPerceptron:
 		self._output_layer_activation = e
 	
 	@property
-	def output_layer_activation(self):
-		return self._output_layer_activation
+	def activation_func(self):
+		return self._activation_func
 
-	@output_layer_activation.setter
-	def	output_layer_activation(self, e):
-		if e not in ['softmax', 'sigmoid', 'relu', 'tanh']:
-			raise ValueError('activation function must be relu, softmax or sigmoid')
-		self._output_layer_activation = e
+	@activation_func.setter
+	def	activation_func(self, e):
+		if e not in ['sigmoid', 'relu', 'tanh']:
+			raise ValueError('activation function must be relu, sigmoid or tanh')
+		self._activation_func = e
 
 	@property
 	def momentum(self):
@@ -135,8 +135,8 @@ class MultiLayerPerceptron:
 
 	@split.setter
 	def	split(self, e):
-		if e <= 0 or e >= 1:
-			raise ValueError('split must be between 0 and 1')
+		if e < 0.05 or e > 0.95:
+			raise ValueError('split must be between 0.05 and 0.95')
 		self._split = e
 
 	@property
@@ -263,6 +263,7 @@ class MultiLayerPerceptron:
 		self.input = np.array(train_input)
 		self.nb_params = train_input.shape[1]
 		self.nb_samples = train_input.shape[0]
+
 		self.layers.insert(0, Layer(self.nb_params))
 		self.layers_sizes.insert(0, self.nb_params)
 

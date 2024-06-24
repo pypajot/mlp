@@ -2,8 +2,14 @@
 
 import pickle
 import matplotlib.pyplot as plt
+import argparse
 
 def	main():
+
+	parser = argparse.ArgumentParser(
+		prog='compare.py',
+		description='Compare different models stored in metrics.pkl'
+	)
 
 	try:
 		metric_file = open('metrics.pkl', 'rb')
