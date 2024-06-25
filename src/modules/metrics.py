@@ -106,7 +106,8 @@ class Metrics:
 	def show(self, early_stopping):
 		fig, axs = plt.subplots(2, 2)
 		axs[0][0].plot(range(1, 1 + len(self.train_loss)), self.train_loss, label='train')
-		axs[0][0].plot(range(1, 1 + len(self.test_loss)), self.test_loss, label='validation')
+		if self.test_loss:
+			axs[0][0].plot(range(1, 1 + len(self.test_loss)), self.test_loss, label='validation')
 		axs[0][0].set_xlabel('epochs')
 		axs[0][0].set_ylabel('loss')
 		axs[0][0].xaxis.set_major_locator(MaxNLocator(integer=True))
@@ -114,7 +115,8 @@ class Metrics:
 		axs[0][0].set_title('Loss')
 
 		axs[0][1].plot(range(1, len(self.train_acc) + 1), self.train_acc, label='train')
-		axs[0][1].plot(range(1, len(self.test_acc) + 1), self.test_acc, label='validation')
+		if self.test_acc:
+			axs[0][1].plot(range(1, len(self.test_acc) + 1), self.test_acc, label='validation')
 		axs[0][1].set_xlabel('epochs')
 		axs[0][1].set_ylabel('accurary')
 		axs[0][1].xaxis.set_major_locator(MaxNLocator(integer=True))

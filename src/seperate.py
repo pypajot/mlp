@@ -2,18 +2,28 @@
 
 import pandas as pd
 import argparse
+import numpy as np
 
 from modules.utils import split_df
 
 def separate(file, split, seed):
-	negatives = file[file[1] == 'B']
-	positives = file[file[1] == 'M']
+	unique = np.unique(file[1])
+	categories = [file[file[1] == u] for u in unique]
+	# negatives = file[file[1] == 'B']
+	# positives = file[file[1] == 'M']
 
-	negatives_train, negatives_test = split_df(negatives, split, seed)
-	positives_train, positives_test = split_df(positives, split, seed)
+	data_train = pd.DataFrame()
+	data_validation = pd.DataFrame()
+	for c in categories:
+		train, validation = split_df(c, split, seed)
+		data_train = pd.concat([data_train, train])
+		data_validation = pd.concat([data_validation, validation])
+	# categories_train, categories_test = split_df(negatives, split, seed)
+	# negatives_train, negatives_test = split_df(negatives, split, seed)
+	# positives_train, positives_test = split_df(positives, split, seed)
 
-	data_train = pd.concat([negatives_train, positives_train])
-	data_validation = pd.concat([negatives_test, positives_test])
+	# data_train = pd.concat([negatives_train, positives_train])
+	# data_validation = pd.concat([negatives_test, positives_test])
 
 	return data_train, data_validation
 

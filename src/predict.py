@@ -4,6 +4,7 @@ import pickle
 import pandas as pd
 import matplotlib.pyplot as plt
 import argparse
+import numpy as np
 
 def	main():
 
@@ -16,9 +17,7 @@ def	main():
 
 	try:
 		data = pd.read_csv(args.data, header = None)
-		data[data == 'B'] = 0
-		data[data == 'M'] = 1
-		output = data[1]
+		output_literal = data[1]
 		input = data.drop(columns=[0, 1])
 	except Exception:
 		print('test data is invalid')
@@ -27,6 +26,7 @@ def	main():
 	try:
 		data_file = open('model.pkl', 'rb')
 		model = pickle.load(data_file)
+		output = [np.where(model.unique == o)[0][0] for o in output_literal]
 	except Exception as e:
 		print('Error opening model.pkl')
 		print(e)

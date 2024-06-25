@@ -6,5 +6,6 @@ mclean:
 
 fclean:
 	rm -f *.pkl
-	rm -rf data_train.csv data_validation.csv
+	rm -f data_train.csv
+	rm -f data_validation.csv
 .PHONY: install

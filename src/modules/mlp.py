@@ -268,6 +268,8 @@ class MultiLayerPerceptronClassifier:
 		self.layers_sizes.insert(0, self.nb_params)
 
 		self.unique, self.train_output = np.unique(train_output, return_inverse=True)
+		if self.output_layer_activation == 'sigmoid' and len(self.unique) != 2:
+			raise Exception("sigmoid ativation on outer layer can't be used with more than 2 categories")
 		if self.output_layer_activation == 'softmax':
 			self.size_output = len(self.unique)
 			self.output = np.eye(self.size_output)[self.train_output]

@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-def	split_df(df: pd.DataFrame, split, seed):
+def	split_df(df, split, seed):
 	train_df = df.sample(None, split, random_state=seed)
 	test_df = df.drop(train_df.index)
 	return train_df, test_df
