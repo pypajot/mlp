@@ -17,13 +17,19 @@ def	main():
 	parser.add_argument('-o', '--output', type=int, default=1)
 	args = parser.parse_args()
 
+	for d in args.drop:
+		if d < 0:
+			print('cannot drop negatives columns')
+			exit(3)
+
 	try:
 		data = pd.read_csv(args.data, header = None)
 		data = data.drop(columns=args.drop)
 		output_literal = data[args.output]
 		input = data.drop(columns=[args.output])
-	except Exception:
+	except Exception as e:
 		print('test data is invalid')
+		print(e)
 		exit(2)
 
 	try:

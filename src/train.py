@@ -39,13 +39,19 @@ def main():
 
 	args = parser.parse_args()
 
+	for d in args.drop:
+		if d < 0:
+			print('cannot drop negatives columns')
+			exit(3)
+
 	try:
 		data_train = pd.read_csv(args.data_train, header = None)
 		data_train = data_train.drop(columns=args.drop)
 		train_output = data_train[args.output]
 		train_input = data_train.drop(columns=[args.output])
-	except Exception:
+	except Exception as e:
 		print('training data is invalid')
+		print(e)
 		exit(2)
 
 	try:
