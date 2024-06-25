@@ -1,11 +1,12 @@
 import numpy as np
+import pandas as pd
 
 from modules.optimizers import optimizers
 from modules.layer import Layer
 from modules.metrics import Metrics
 from modules.distribution import distribution
 from modules.utils import batch_init, get_batch
-
+from seperate import seperate
 
 class MultiLayerPerceptronClassifier:
 	def __init__(
@@ -62,6 +63,7 @@ class MultiLayerPerceptronClassifier:
 		self.best_loss = np.inf
 		self.best_acc = 0
 		self.converged_in = 0
+		self.seed=seed
 		self.rng = np.random.default_rng(seed)
 		self.name = name
 		self.split = split
@@ -241,25 +243,16 @@ class MultiLayerPerceptronClassifier:
 
 		return train_input
 
-	def	_separate(self, train_input, train_output):
-
-		size = len(train_input)
-		indexes = list(range(size))
-		self.rng.shuffle(indexes)
-		shuffled_input = np.array(train_input)[indexes]
-		shuffled_output = np.array(train_output)[indexes]
-		new_train_input = shuffled_input[:int(self.split * size)]
-		new_train_output = shuffled_output[:int(self.split * size)]
-		test_input = shuffled_input[int(self.split * size):]
-		test_output = shuffled_output[int(self.split * size):]
-
-		return new_train_input, new_train_output, test_input, test_output
+	def	_seperate(self, train_input, train_output):
+		file = pd.concat([train_output, train_input], axis=1, ignore_index=True)
+		data_train, data_test = seperate(file, 0, self.split, self.seed)
+		return data_train.drop(columns=0), data_train[0], data_test.drop(columns=0), data_test[0]
 	
 	def	__init_data(self, train_input, train_output):
 
 		train_input = self._normalize(train_input)
-		train_input, train_output, test_input, test_output = self._separate(train_input, train_output)
-
+		if self.early_stopping:
+			train_input, train_output, test_input, test_output = self._seperate(train_input, train_output)
 		self.input = np.array(train_input)
 		self.nb_params = train_input.shape[1]
 		self.nb_samples = train_input.shape[0]
@@ -279,8 +272,9 @@ class MultiLayerPerceptronClassifier:
 		self.layers.append(Layer(self.size_output, self.output_layer_activation))
 		self.layers_sizes.append(self.size_output)
 
-		self.test_input = test_input
-		self.test_output = [np.where(self.unique == o)[0][0] for o in test_output]
+		if self.early_stopping:
+			self.test_input = test_input
+			self.test_output = [np.where(self.unique == o)[0][0] for o in test_output]
 
 	def	__init_weights(self):
 		for i in range (1, len(self.layers_sizes)):
@@ -351,8 +345,9 @@ class MultiLayerPerceptronClassifier:
 				self.__backprop(batch_index, steps)
 
 			self.metrics.add_loss_acc(self.nb_samples)
-			self.__feedforward(self.test_input)
+
 			if self.early_stopping:
+				self.__feedforward(self.test_input)
 				self.metrics.get_test_loss_and_acc(self)
 
 			print(
@@ -377,8 +372,8 @@ class MultiLayerPerceptronClassifier:
 			self.converged_in = i
 
 	def	predict(self, input, output):
-		for i in input.columns:
-			input[i] = (input[i] - self.norm['mean'][i - 2]) / self.norm['std'][i - 2]
+		for (i, mean, std) in zip(input.columns, self.norm['mean'], self.norm['std']):
+			input[i] = (input[i] - mean) / std
 		if self.converged_in == 0:
 			print("Can't predict on an untrained model")
 			return

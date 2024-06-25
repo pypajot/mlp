@@ -13,9 +13,9 @@ class Metrics:
 		self.test_loss = []
 		self.train_acc = []
 		self.test_acc = []
-		self.test_precision = 0
-		self.test_recall = 0
-		self.test_f1score = 0
+		self.precision = 0
+		self.recall = 0
+		self.f1score = 0
 		self.confusion_matrix = np.empty((0, 0))
 		self.name = name
 
@@ -24,7 +24,6 @@ class Metrics:
 		acc = 0
 		
 		for i in range (mlp.layers[-1].neurons.shape[0]):
-			# print(mlp.layers[-1].neurons[i], mlp.test_output[i])
 			loss += self.loss_func(mlp.layers[-1].neurons[i], mlp.test_output[i])
 			if mlp.output_layer_activation == 'softmax':
 				acc += mlp.test_output[i] == np.argmax(mlp.layers[-1].neurons[i])
@@ -60,8 +59,8 @@ class Metrics:
 		else:
 			for i in range(size):
 				self.acc += self.confusion_matrix[i][i]
-				self.precision += self.confusion_matrix[i][i] / (size * (np.sum(self.confusion_matrix[i][:])))
-				self.recall += self.confusion_matrix[i][i] / (size * (np.sum(self.confusion_matrix[:][i])))
+				self.precision += self.confusion_matrix[i][i] / (np.sum(self.confusion_matrix, axis=0)[i] * size)
+				self.recall += self.confusion_matrix[i][i] / (np.sum(self.confusion_matrix, axis=1)[i] * size)
 			self.acc /= np.sum(self.confusion_matrix)
 		self.f1score = 2 * self.precision * self.recall / (self.precision + self.recall)
 

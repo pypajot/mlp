@@ -14,15 +14,15 @@ def main():
 		description='Train a MLPClassifier on some data'
 	)
 	parser.add_argument('data_train')
-	parser.add_argument('-L', '--layers',nargs='+', type=int, default=[100, 100])
+	parser.add_argument('-L', '--layers', nargs='+', type=int, default=[100, 100])
 	parser.add_argument('-e', '--epochs', type=int, default=300)
 	parser.add_argument('-l', '--learning_rate', type=float, default=0.001)
 	parser.add_argument('-a', '--activation', default='relu')
 	parser.add_argument('-b', '--batch_size', type=int, default=200)
-	parser.add_argument('-o', '--optimizer', default='adam')
+	parser.add_argument('-O', '--optimizer', default='adam')
 	parser.add_argument('-E', '--early_stopping', action='store_true')
 	parser.add_argument('-A', '--output_layer_activation', default='softmax')
-	parser.add_argument('-d', '--distribution', default='XGuniform')
+	parser.add_argument('-D', '--distribution', default='XGuniform')
 	parser.add_argument('-m', '--momentum', type=float, default=0.9)
 	parser.add_argument('-r', '--regul', type=float, default=0.0001)
 	parser.add_argument('-t', '--tol', type=float, default=0.0001)
@@ -33,6 +33,8 @@ def main():
 	parser.add_argument('-b2', '--beta2', type=float, default=0.999)
 	parser.add_argument('-N', '--name', default=None)
 	parser.add_argument('-n', '--nesterov', action='store_true')
+	parser.add_argument('-d', '--drop', nargs='+', type=int, default=[])
+	parser.add_argument('-o', '--output', type=int, default=1)
 
 
 
@@ -40,8 +42,9 @@ def main():
 
 	try:
 		data_train = pd.read_csv(args.data_train, header = None)
-		train_output = data_train[1]
-		train_input = data_train.drop(columns=[0, 1])
+		data_train = data_train.drop(columns=args.drop)
+		train_output = data_train[args.output]
+		train_input = data_train.drop(columns=[args.output])
 	except Exception:
 		print('training data is invalid')
 		exit(2)
@@ -70,6 +73,7 @@ def main():
 		model.fit(train_input, train_output)
 		model.metrics.show(model.early_stopping)
 	except Exception as e:
+		print('Error during training')
 		print(e)
 		exit(1)
 
@@ -78,8 +82,8 @@ def main():
 		file = open('model.pkl', 'wb')
 		pickle.dump(model, file)
 	except Exception as e:
-		print(e)
 		print('Error opening model.pkl')
+		print(e)
 		exit(2)
 
 	try:
@@ -92,8 +96,8 @@ def main():
 		metric_file_write = open('metrics.pkl', 'wb')
 		metrics = pickle.dump(metrics, metric_file_write)
 	except Exception as e:
-		print(e)
 		print('Error pickling metrics')
+		print(e)
 		exit(2)
 
 if __name__ == '__main__':

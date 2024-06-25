@@ -13,12 +13,15 @@ def	main():
 		description='Predict result on a given set of data from a already trained model'
 	)
 	parser.add_argument('data')
+	parser.add_argument('-d', '--drop', nargs='+', type=int, default=[])
+	parser.add_argument('-o', '--output', type=int, default=1)
 	args = parser.parse_args()
 
 	try:
 		data = pd.read_csv(args.data, header = None)
-		output_literal = data[1]
-		input = data.drop(columns=[0, 1])
+		data = data.drop(columns=args.drop)
+		output_literal = data[args.output]
+		input = data.drop(columns=[args.output])
 	except Exception:
 		print('test data is invalid')
 		exit(2)
