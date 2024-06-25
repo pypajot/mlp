@@ -17,12 +17,12 @@ def main():
 	parser.add_argument('-L', '--layers', nargs='+', type=int, default=[100, 100])
 	parser.add_argument('-e', '--epochs', type=int, default=300)
 	parser.add_argument('-l', '--learning_rate', type=float, default=0.001)
-	parser.add_argument('-a', '--activation', default='relu')
+	parser.add_argument('-a', '--activation', default='relu', choices=['sigmoid', 'relu', 'tanh'])
 	parser.add_argument('-b', '--batch_size', type=int, default=200)
-	parser.add_argument('-O', '--optimizer', default='adam')
+	parser.add_argument('-O', '--optimizer', default='adam', choices=['adam', 'sgd'])
 	parser.add_argument('-E', '--early_stopping', action='store_true')
-	parser.add_argument('-A', '--output_layer_activation', default='softmax')
-	parser.add_argument('-D', '--distribution', default='XGuniform')
+	parser.add_argument('-A', '--output_layer_activation', default='softmax', choices=['softmax', 'sigmoid'])
+	parser.add_argument('-D', '--distribution', default='XGuniform', choices=['normal', 'uniform', 'LCnormal', 'LCuniform', 'XGnormal', 'XGuniform', 'Henormal', 'Heuniform'])
 	parser.add_argument('-m', '--momentum', type=float, default=0.9)
 	parser.add_argument('-r', '--regul', type=float, default=0.0001)
 	parser.add_argument('-t', '--tol', type=float, default=0.0001)
@@ -35,7 +35,6 @@ def main():
 	parser.add_argument('-n', '--nesterov', action='store_true')
 	parser.add_argument('-d', '--drop', nargs='+', type=int, default=[])
 	parser.add_argument('-o', '--output', type=int, default=1)
-
 
 
 	args = parser.parse_args()

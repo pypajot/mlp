@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 
 def	split_df(df, split, seed):
 	train_df = df.sample(None, split, random_state=seed)

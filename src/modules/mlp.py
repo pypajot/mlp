@@ -137,8 +137,8 @@ class MultiLayerPerceptronClassifier:
 
 	@split.setter
 	def	split(self, e):
-		if e < 0.05 or e > 0.95:
-			raise ValueError('split must be between 0.05 and 0.95')
+		if e <= 0 or e > 1:
+			raise ValueError('split must be between 0 and 1')
 		self._split = e
 
 	@property
@@ -253,6 +253,8 @@ class MultiLayerPerceptronClassifier:
 		train_input = self._normalize(train_input)
 		if self.early_stopping:
 			train_input, train_output, test_input, test_output = self._seperate(train_input, train_output)
+			if not train_output.size or not test_output.size:
+				raise Exception('split invalid, no training or testing data')
 		self.input = np.array(train_input)
 		self.nb_params = train_input.shape[1]
 		self.nb_samples = train_input.shape[0]
