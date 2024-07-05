@@ -9,6 +9,50 @@ from modules.utils import batch_init, get_batch
 from seperate import seperate
 
 class MultiLayerPerceptronClassifier:
+	"""Multi-layer perceptron classifier
+
+	Parameters:
+
+		layers_sizes: tuple, optional
+			Number of neurons in each layer. Defaults to (100, 100).
+		activation_func: str, optional
+			Activation function of hidden layers. Defaults to 'relu'.
+		epochs: int, optional
+			Maximum umber of epochs. Defaults to 300.
+		learning_rate: float, optional
+			Learning rate. Defaults to 0.01.
+		batch_size: int, optional
+			Batch size. Defaults to 200.
+		optimizer: str, optional
+			Optimizer. Defaults to 'adam'.
+		regul: float, optional
+			L2 regularization term. Defaults to 0.0001.
+		seed: int, optional
+			Random seed for weights initialization. Defaults to None.
+		distrib: str, optional
+			Weight initialization distribution. Defaults to 'XGuniform'.
+		output_layer_activation: str, optional
+			Output layer activation function. Defaults to 'softmax'.
+		momentum: float, optional
+			Momentum. Only used with solver 'sgd'. Defaults to 0.9.
+		nesterov: bool, optional
+			Whether to use nesterov momentum. Only used with solver 'sgd'. Defaults to False.
+		tol: float, optional
+			Difference needed for loss or accuracy during n_iter_to_change epochs to trigger stopping. Defaults to 0.0001.
+		n_iter_to_change: int, optional
+			Number of iterations to change. Defaults to 10.
+		early_stopping: bool, optional
+			Whether to use early stopping. If true dataset will be split into train and test set according to split, and stopping will use accuracy. Defaults to False.
+		beta1: float, optional
+			Beta1 term for adam optimizer. Defaults to 0.9.
+		beta2: float, optional
+			Beta2 term for adam optimizer. Defaults to 0.999.
+		name: str, optional
+			Name for comparison with other models. Defaults to None.
+		split: float, optional
+			Split. Defaults to 0.8.
+	"""
+
 	def __init__(
 		self,
 		layers_sizes=(100, 100),
@@ -232,6 +276,17 @@ class MultiLayerPerceptronClassifier:
 		self._beta2 = b
 	
 	def	_normalize(self, train_input):
+		"""Normalize the input data
+		
+		Parameters:
+			train_input: data frame
+				Input data
+
+		Returns:
+			train_input: data frame
+				Normalized input data
+		"""
+
 		self.norm = {
 			'mean': [],
 			'std': []
@@ -244,11 +299,34 @@ class MultiLayerPerceptronClassifier:
 		return train_input
 
 	def	_seperate(self, train_input, train_output):
+		"""Split the data into train and test sets
+		
+		Parameters:
+			train_input: data frame
+				Input data
+			train_output: data frame
+				Output data
+
+		Returns:
+			data_train: data frame
+				Train set
+			data_test: data frame
+				Test set
+		"""
+
 		file = pd.concat([train_output, train_input], axis=1, ignore_index=True)
 		data_train, data_test = seperate(file, 0, self.split, self.seed)
 		return data_train.drop(columns=0), data_train[0], data_test.drop(columns=0), data_test[0]
 	
 	def	__init_data(self, train_input, train_output):
+		"""Initialize the data
+
+		Parameters:
+			train_input: data frame
+				Input data
+			train_output: data frame
+				Output data
+		"""
 
 		train_input = self._normalize(train_input)
 		if self.early_stopping:
@@ -279,6 +357,8 @@ class MultiLayerPerceptronClassifier:
 			self.test_output = [np.where(self.unique == o)[0][0] for o in test_output]
 
 	def	__init_weights(self):
+		"""Initialize the weights and biases"""
+
 		for i in range (1, len(self.layers_sizes)):
 			if self.opti_name == 'adam':
 				self.mt_b.append(np.zeros((1, self.layers_sizes[i])))
@@ -293,18 +373,50 @@ class MultiLayerPerceptronClassifier:
 			self.velocity_b.append(np.zeros(bias.shape))
 
 	def	add_layer(self, size, function):
+		"""Add a layer to the model
+
+		Parameters:
+			size: int
+				Number of neurons in the layer
+			function: str
+				Activation function of the layer
+		"""
+	
 		self.layers.append(Layer(size, function))
 		self.layers_sizes.append(size)
 		self.size += 1
 
 
 	def fit(self, train_input, train_output):
+		"""Fit the model to the data
+
+		Parameters:
+			train_input: data frame
+				Input data
+			train_output: data frame
+				Output data
+		"""
+	
 		self.__init_data(train_input, train_output)
 		self.__init_weights()
 		self.__train()
 
 	def __check_early_stopping(self, metrics: Metrics, no_changes, i):
+		"""Check if early stopping should be triggered
 		
+		Parameters:
+			metrics: object
+				Metrics object
+			no_changes: int
+				Number of epochs with no changes
+			i: int
+				Current epoch
+			
+		Returns:
+			no_changes: int
+				Number of epochs with no changes
+		"""
+
 		if self.early_stopping:
 			if metrics.test_acc[-1] - self.best_acc < self.tol:
 				no_changes += 1
@@ -373,6 +485,15 @@ class MultiLayerPerceptronClassifier:
 				break
 
 	def	predict(self, input, output):
+		"""Predict the output of the input data
+		
+		Parameters:
+			input: data frame
+				Input data
+			output: data frame
+				Output data
+		"""
+	
 		for (i, mean, std) in zip(input.columns, self.norm['mean'], self.norm['std']):
 			input[i] = (input[i] - mean) / std
 		if self.converged_in == 0:
@@ -382,6 +503,13 @@ class MultiLayerPerceptronClassifier:
 		self.__feedforward(input)
 
 	def __feedforward(self, input):
+		"""Feed the input data through the model
+
+		Parameters:
+			input: data frame
+				Input data
+		"""
+	
 		self.layers[0].neurons = input
 		for i in range (1, self.size):
 			self.layers[i].neurons_base = np.dot(self.layers[i - 1].neurons, self.weights[i - 1]) + self.bias[i - 1]
@@ -389,5 +517,14 @@ class MultiLayerPerceptronClassifier:
 		return self.layers[-1].neurons
 
 	def	__backprop(self, batch_index, steps):
+		"""Backpropagate the error through the model
+
+		Parameters:
+			batch_index: list
+				Indices of the batch
+			steps: int
+				Number of steps
+		"""
+		
 		self.optimizer(self, batch_index, steps)
 		

@@ -5,6 +5,35 @@ from matplotlib.ticker import MaxNLocator
 from modules.loss import loss_func
 
 class Metrics:
+	"""Class to store metrics
+
+	Attributes:
+		acc: float
+			Accuracy
+		loss: float
+			Loss
+		loss_func: function
+			Loss function
+		train_loss: list
+			Training loss
+		test_loss: list
+			Validation loss
+		train_acc: list
+			Training accuracy
+		test_acc: list
+			Validation accuracy
+		precision: float
+			Precision
+		recall: float
+			Recall
+		f1score: float
+			F1 score
+		confusion_matrix: array
+			Confusion matrix
+		name: str
+			Name of the metric
+	"""
+
 	def	__init__(self, name, activation):
 		self.acc = 0
 		self.loss = 0
@@ -20,6 +49,13 @@ class Metrics:
 		self.name = name
 
 	def get_test_loss_and_acc(self, mlp):
+		"""Get test loss and accuracy
+		
+		Parameters:
+			mlp: object
+				MLP object
+		"""
+	
 		loss = 0
 		acc = 0
 		
@@ -36,6 +72,15 @@ class Metrics:
 		self.test_acc.append(acc)
 
 	def get_confusion_and_metrics(self, mlp, output):
+		"""Get confusion matrix and evaluation metrics
+
+		Parameters:
+			mlp: object
+				MLP object
+			output: array
+				Output values
+		"""
+	
 		size = max(output) + 1
 		self.converged_in = mlp.converged_in
 		self.confusion_matrix = np.zeros((size, size))
@@ -66,6 +111,15 @@ class Metrics:
 
 
 	def get_train_loss_and_acc(self, mlp, batch_index):
+		"""Get train loss and accuracy
+
+		Parameters:
+			mlp: object
+				MLP object
+			batch_index: list
+				Indices of the batch
+		"""
+	
 		for i in batch_index:
 			self.loss += self.loss_func(mlp.layers[-1].neurons[batch_index.index(i)], mlp.train_output[i])
 			if mlp.output_layer_activation == 'softmax':
@@ -74,11 +128,26 @@ class Metrics:
 				self.acc += (mlp.train_output[i] == round(mlp.layers[-1].neurons[batch_index.index(i)][0]))
 
 	def add_loss_acc(self, out_size):
+		"""Add loss and accuracy to lists
+
+		Parameters:
+			out_size: int
+				Output size
+		"""
+	
 		self.train_loss.append(self.loss / out_size)
 		self.train_acc.append(self.acc / out_size)
 
 	def	show_confusion_and_metrics(self, plot_1, plot_2):
+		"""Show confusion matrix and evaluation metrics
 		
+		Parameters:
+			plot_1: object
+				Plot object
+			plot_2: object
+				Plot object
+		"""
+	
 		plot_1.matshow(self.confusion_matrix, cmap=plt.cm.Blues)
 		for i in range(self.confusion_matrix.shape[0]):
 			for j in range(self.confusion_matrix.shape[0]):
@@ -103,6 +172,13 @@ class Metrics:
 		plot_2.set_title('Evaluation metrics')
 
 	def show(self, early_stopping):
+		"""Show plots
+		
+		Parameters:
+			early_stopping: bool
+				Early stopping flag
+		"""
+	
 		fig, axs = plt.subplots(2, 2)
 		axs[0][0].plot(range(1, 1 + len(self.train_loss)), self.train_loss, label='train')
 		if self.test_loss:

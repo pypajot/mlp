@@ -7,6 +7,25 @@ import numpy as np
 from modules.utils import split_df
 
 def seperate(file, output, split, seed=None):
+	"""Seperate data into train and validation sets
+
+	Args:
+		file: data frame
+			The data to be split
+		output: int
+			The column to be used for splitting
+		split: float)
+			The ratio of the split
+		seed: int, array-like, BitGenerator, np.random.RandomState, np.random.Generator, optional
+			The random seed to be used for splitting. Defaults to None.
+
+	Returns:
+		data_train: data frame
+			Train set
+		data_validation: data frame
+			Validation set
+	"""
+
 	unique = np.unique(file[output])
 	categories = [file[file[output] == u] for u in unique]
 

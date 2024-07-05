@@ -1,6 +1,27 @@
 import numpy as np 
 
 def get_part_deriv(mlp, delta, batch_index, i):
+	"""Get partial derivatives for a layer
+
+	Parameters:
+		mlp: object
+			MLP object
+		delta: array
+			Delta value
+		batch_index: list
+			Indices of the batch
+		i: int
+			Layer index
+
+	Returns:
+		delta: array
+			Delta value
+		d_bias: array
+			Bias partial derivative
+		d_weights: array
+			Weights partial derivative
+	"""
+
 	if (i == mlp.size - 1):
 		delta = mlp.layers[i].neurons - mlp.output[batch_index]
 	else:
@@ -8,6 +29,17 @@ def get_part_deriv(mlp, delta, batch_index, i):
 	return delta, np.mean(delta, 0), np.dot(mlp.layers[i - 1].neurons.T, delta) / len(batch_index)
 
 def adam(mlp, batch_index, steps):
+	"""Adam optimizer
+	
+	Parameters:
+		mlp: object
+			MLP object
+		batch_index: list
+			Indices of the batch
+		steps: int
+			Number of steps
+	"""
+
 	delta = 0
 	for i in reversed(range(1, mlp.size)):
 		delta, d_bias, d_weights = get_part_deriv(mlp, delta, batch_index, i)
@@ -33,6 +65,17 @@ def adam(mlp, batch_index, steps):
 		mlp.weights[i - 1] -= mlp.learning_rate * mt_corr_w
 
 def gradient_descent(mlp, batch_index, steps):
+	"""Gradient descent optimizer
+
+	Parameters:
+		mlp: object
+			MLP object
+		batch_index: list
+			Indices of the batch
+		steps: int
+			Number of steps (useless, only used for adam optimizer)
+	"""
+
 	delta = 0
 	for i in reversed(range(1, mlp.size)):
 		delta, d_bias, d_weights = get_part_deriv(mlp, delta, batch_index, i)
