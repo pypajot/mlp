@@ -325,6 +325,7 @@ class MultiLayerPerceptronClassifier:
 		return no_changes
 
 	def	__train(self):
+		"""Train the model using the parameters and data provided."""
 		if self.name == None or type(self.name) is not str:
 			self.name = self.opti_name + self.output_layer_activation
 		self.metrics = Metrics(self.name, self.output_layer_activation)
@@ -365,13 +366,11 @@ class MultiLayerPerceptronClassifier:
 					self.weights = [w.copy() for w in self.best_weights]
 					self.bias = [b.copy() for b in self.best_bias]
 					self.__feedforward(self.test_input)
+					self.converged_in = self.best_epoch
+					self.metrics.get_confusion_and_metrics(self, self.test_output)
+				else:
+					self.converged_in = i
 				break
-	
-		if self.early_stopping:
-			self.converged_in = self.best_epoch
-			self.metrics.get_confusion_and_metrics(self, self.test_output)
-		else:
-			self.converged_in = i
 
 	def	predict(self, input, output):
 		for (i, mean, std) in zip(input.columns, self.norm['mean'], self.norm['std']):
