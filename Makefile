@@ -8,4 +8,5 @@ fclean:
 	rm -f *.pkl
 	rm -f data_train.csv
 	rm -f data_validation.csv
-.PHONY: install
+
+.PHONY: install mclean fclean
