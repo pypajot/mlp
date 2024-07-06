@@ -4,8 +4,8 @@ def get_part_deriv(mlp, delta, batch_index, i):
 	"""Get partial derivatives for a layer
 
 	Parameters:
-		mlp: object
-			MLP object
+		mlp: mlp class
+			base MLP object
 		delta: array
 			Delta value
 		batch_index: list
@@ -32,8 +32,8 @@ def adam(mlp, batch_index, steps):
 	"""Adam optimizer
 	
 	Parameters:
-		mlp: object
-			MLP object
+		mlp: mlp class
+			base MLP object
 		batch_index: list
 			Indices of the batch
 		steps: int
@@ -68,8 +68,8 @@ def gradient_descent(mlp, batch_index, steps):
 	"""Gradient descent optimizer
 
 	Parameters:
-		mlp: object
-			MLP object
+		mlp: mlp class
+			base MLP object
 		batch_index: list
 			Indices of the batch
 		steps: int

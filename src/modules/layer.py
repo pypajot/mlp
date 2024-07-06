@@ -39,6 +39,9 @@ deriv_acti = {
 }
 
 class Layer:
+	"""Layer class
+	"""
+	
 	def	__init__(self, size, function = 'relu'):
 		self.size = size
 		self.activ_name = function

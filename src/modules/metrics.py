@@ -31,7 +31,7 @@ class Metrics:
 		confusion_matrix: array
 			Confusion matrix
 		name: str
-			Name of the metric
+			Name of the model
 	"""
 
 	def	__init__(self, name, activation):
@@ -52,8 +52,8 @@ class Metrics:
 		"""Get test loss and accuracy
 		
 		Parameters:
-			mlp: object
-				MLP object
+			mlp: mlp class
+				base MLP object
 		"""
 	
 		loss = 0
@@ -75,8 +75,8 @@ class Metrics:
 		"""Get confusion matrix and evaluation metrics
 
 		Parameters:
-			mlp: object
-				MLP object
+			mlp: mlp class
+				base MLP object
 			output: array
 				Output values
 		"""
@@ -114,8 +114,8 @@ class Metrics:
 		"""Get train loss and accuracy
 
 		Parameters:
-			mlp: object
-				MLP object
+			mlp: mlp class
+				base MLP object
 			batch_index: list
 				Indices of the batch
 		"""
@@ -132,7 +132,7 @@ class Metrics:
 
 		Parameters:
 			out_size: int
-				Output size
+				number of samples in the output
 		"""
 	
 		self.train_loss.append(self.loss / out_size)
@@ -142,9 +142,9 @@ class Metrics:
 		"""Show confusion matrix and evaluation metrics
 		
 		Parameters:
-			plot_1: object
+			plot_1: axis object
 				Plot object
-			plot_2: object
+			plot_2: axis object
 				Plot object
 		"""
 	

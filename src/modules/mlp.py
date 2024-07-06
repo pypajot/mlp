@@ -12,45 +12,65 @@ class MultiLayerPerceptronClassifier:
 	"""Multi-layer perceptron classifier
 
 	Parameters:
-
 		layers_sizes: tuple, optional
-			Number of neurons in each layer. Defaults to (100, 100).
-		activation_func: str, optional
-			Activation function of hidden layers. Defaults to 'relu'.
+			Number of neurons in each hidden layer
+			Defaults to (100, 100)
+		activation_func: {"relu", "sigmoid", "tanh"}, optional
+			Activation function of hidden layers
+			Defaults to 'relu'
 		epochs: int, optional
-			Maximum umber of epochs. Defaults to 300.
+			Maximum umber of epochs
+			Defaults to 300
 		learning_rate: float, optional
-			Learning rate. Defaults to 0.01.
+			Learning rate
+			Defaults to 0.01
 		batch_size: int, optional
-			Batch size. Defaults to 200.
-		optimizer: str, optional
-			Optimizer. Defaults to 'adam'.
+			Batch size
+			Defaults to 200
+		optimizer: {"sgd", "adam"}, optional
+			Stochastic optimizer
+			Defaults to 'adam'
 		regul: float, optional
-			L2 regularization term. Defaults to 0.0001.
+			L2 regularization term
+			Defaults to 0.0001
 		seed: int, optional
-			Random seed for weights initialization. Defaults to None.
-		distrib: str, optional
-			Weight initialization distribution. Defaults to 'XGuniform'.
-		output_layer_activation: str, optional
-			Output layer activation function. Defaults to 'softmax'.
+			Random seed for weights initialization
+			Defaults to None
+		distrib: {'normal', 'uniform', 'LCnormal', 'LCuniform', 'XGnormal', 'XGuniform', 'Henormal', 'Heuniform'}, optional
+			Weight initialization distribution
+			Defaults to 'XGuniform'
+		output_layer_activation: {"softmax", "sigmoid"}, optional
+			Output layer activation function
+			Defaults to 'softmax'
 		momentum: float, optional
-			Momentum. Only used with solver 'sgd'. Defaults to 0.9.
+			Momentum Only used with solver 'sgd'
+			Defaults to 0.9
 		nesterov: bool, optional
-			Whether to use nesterov momentum. Only used with solver 'sgd'. Defaults to False.
+			Whether to use nesterov momentum
+			Only used with solver 'sgd'
+			Defaults to False
 		tol: float, optional
-			Difference needed for loss or accuracy during n_iter_to_change epochs to trigger stopping. Defaults to 0.0001.
+			Difference needed for loss or accuracy during n_iter_to_change epochs to trigger stopping
+			Defaults to 0.0001
 		n_iter_to_change: int, optional
-			Number of iterations to change. Defaults to 10.
+			Number of iterations to change
+			Defaults to 10
 		early_stopping: bool, optional
-			Whether to use early stopping. If true dataset will be split into train and test set according to split, and stopping will use accuracy. Defaults to False.
+			Whether to use early stopping
+			If true dataset will be split into train and test set according to split, and stopping will use accuracy
+			Defaults to False
 		beta1: float, optional
-			Beta1 term for adam optimizer. Defaults to 0.9.
+			Beta1 term for adam optimizer
+			Defaults to 0.9
 		beta2: float, optional
-			Beta2 term for adam optimizer. Defaults to 0.999.
+			Beta2 term for adam optimizer
+			Defaults to 0.999
 		name: str, optional
-			Name for comparison with other models. Defaults to None.
+			Name for comparison with other models
+			Defaults to None
 		split: float, optional
-			Split. Defaults to 0.8.
+			Split for train and test set if early_stopping is used
+			Defaults to 0.8
 	"""
 
 	def __init__(
@@ -308,10 +328,14 @@ class MultiLayerPerceptronClassifier:
 				Output data
 
 		Returns:
-			data_train: data frame
-				Train set
-			data_test: data frame
-				Test set
+			train_input: data frame
+				Training input
+			train_output: data frame
+				Training output
+			test_input: data frame
+				Testing input
+			test_output: data frame
+				Testing output
 		"""
 
 		file = pd.concat([train_output, train_input], axis=1, ignore_index=True)
@@ -405,8 +429,8 @@ class MultiLayerPerceptronClassifier:
 		"""Check if early stopping should be triggered
 		
 		Parameters:
-			metrics: object
-				Metrics object
+			metrics: Metrics object
+				object storing model's metrics
 			no_changes: int
 				Number of epochs with no changes
 			i: int
@@ -523,8 +547,8 @@ class MultiLayerPerceptronClassifier:
 			batch_index: list
 				Indices of the batch
 			steps: int
-				Number of steps
+				Number of steps used for adam optimizer
 		"""
-		
+
 		self.optimizer(self, batch_index, steps)
 		
